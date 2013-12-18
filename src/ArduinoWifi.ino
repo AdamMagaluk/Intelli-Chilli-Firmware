@@ -6,6 +6,8 @@
 #include "utility/debug.h"
 #include "utility/socket.h"
 
+#include "protocol.h"
+
 // These are the interrupt and control pins
 #define ADAFRUIT_CC3000_IRQ   3  // MUST be an interrupt pin!
 #define ADAFRUIT_CC3000_VBAT  5
@@ -25,6 +27,11 @@ Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS,
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 
 #define LISTEN_PORT           3000    // What TCP port to listen on for connections.  The echo protocol uses port 7.
+
+#define BUFFER_SIZE 25
+uint8_t buffer[BUFFER_SIZE];
+
+Message message;
 
 Adafruit_CC3000_Server echoServer(LISTEN_PORT);
 
@@ -72,11 +79,18 @@ void loop(void)
   // Try to get a client which is connected.
   Adafruit_CC3000_ClientRef client = echoServer.available();
   if (client) {
+
+    uint16_t dataAvailable = client.available();
      // Check if there is data available to read.
-     if (client.available() > 0) {
-       // Read a byte and write it to all clients.
-       uint8_t ch = client.read();
-       client.write(ch);
+     if (dataAvailable > 0) {
+       Serial.print("Data Available:");
+       Serial.println(dataAvailable);
+
+       uint8_t bRead = client.read(buffer,BUFFER_SIZE,0);
+
+       client.write("OK",2);
+
+       client.close();
      }
   }
 }
@@ -97,12 +111,12 @@ bool displayConnectionDetails(void)
   }
   else
   {
-    Serial.print(F("\nIP Addr: ")); cc3000.printIPdotsRev(ipAddress);
-    Serial.print(F("\nNetmask: ")); cc3000.printIPdotsRev(netmask);
-    Serial.print(F("\nGateway: ")); cc3000.printIPdotsRev(gateway);
-    Serial.print(F("\nDHCPsrv: ")); cc3000.printIPdotsRev(dhcpserv);
-    Serial.print(F("\nDNSserv: ")); cc3000.printIPdotsRev(dnsserv);
-    Serial.println();
+    Serial.print(F("IP Addr: ")); cc3000.printIPdotsRev(ipAddress); Serial.println();
+    Serial.print(F("Netmask: ")); cc3000.printIPdotsRev(netmask); Serial.println();
+    Serial.print(F("Gateway: ")); cc3000.printIPdotsRev(gateway); Serial.println();
+    Serial.print(F("DHCPsrv: ")); cc3000.printIPdotsRev(dhcpserv); Serial.println();
+    Serial.print(F("DNSserv: ")); cc3000.printIPdotsRev(dnsserv); Serial.println();
+    
     return true;
   }
 }
