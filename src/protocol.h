@@ -29,6 +29,8 @@ enum LidState {
   LID_STATE_OPPENNED
 };
 
+#pragma pack(push, 1)
+
 struct Message {
   CommandType type;
   uint8_t length;
@@ -77,5 +79,7 @@ struct Message_ReturnState {
   uint8_t currentTemp;
   uint8_t lidState;
 };
+
+#pragma pack(pop)
 
 #endif
