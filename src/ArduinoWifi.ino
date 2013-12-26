@@ -2,26 +2,8 @@
   
  ****************************************************/
 
-#include "slowcooker.h"
+//#include "../sketch/SlowCook_ino.h"
 
-#define TEMP_SENSOR_PIN 0
-#define HEATER_IO 13
-#define LID_SWITCH 8
+//#include "../sketch/WifiBase_ino.h"
 
-
-void eventCallback(int event){
-
-}
-
-SlowCooker slowcooker(HEATER_IO,TEMP_SENSOR_PIN,LID_SWITCH,&eventCallback);
-
-
-void setup()
-{
-  Serial.begin(115200);          //  setup serial
-}
-
-void loop()
-{
-  slowcooker.loop();
-}
+#include "../sketch/D18B20Test_ino.h"

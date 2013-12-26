@@ -13,6 +13,15 @@
 #define ADAFRUIT_CC3000_VBAT  5
 #define ADAFRUIT_CC3000_CS    10
 
+#define WLAN_SSID       "Loft21"
+#define WLAN_PASS       "silkylotus997"
+// Security can be WLAN_SEC_UNSEC, WLAN_SEC_WEP, WLAN_SEC_WPA or WLAN_SEC_WPA2
+#define WLAN_SECURITY   WLAN_SEC_WPA2
+#define LISTEN_PORT           3000    // What TCP port to listen on for connections.  The echo protocol uses port 7.
+#define BUFFER_SIZE 25
+
+bool displayConnectionDetails(void);
+
 // Use hardware SPI for the remaining pins
 // On an UNO, SCK = 13, MISO = 12, and MOSI = 11
 Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS,
@@ -21,19 +30,11 @@ Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS,
                                          SPI_CLOCK_DIV2
                                         );
 
-#define WLAN_SSID       "Loft21"
-#define WLAN_PASS       "silkylotus997"
-// Security can be WLAN_SEC_UNSEC, WLAN_SEC_WEP, WLAN_SEC_WPA or WLAN_SEC_WPA2
-#define WLAN_SECURITY   WLAN_SEC_WPA2
+Adafruit_CC3000_Server echoServer(LISTEN_PORT);
 
-#define LISTEN_PORT           3000    // What TCP port to listen on for connections.  The echo protocol uses port 7.
-
-#define BUFFER_SIZE 25
 uint8_t buffer[BUFFER_SIZE];
 
 Message message;
-
-Adafruit_CC3000_Server echoServer(LISTEN_PORT);
 
 void setup(void)
 {
