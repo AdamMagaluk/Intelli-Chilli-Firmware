@@ -44,7 +44,7 @@ void PacketRouter::printMessage(const Message& msg){
   Serial.print("    Data Len:");
   Serial.println(msg.length);
 
-  for(int i=0;i<msg.length;i++){
+  for(int i=0;i<msg.length-3;i++){
     Serial.print("        Data ");
     Serial.print(i);
     Serial.print(":");
