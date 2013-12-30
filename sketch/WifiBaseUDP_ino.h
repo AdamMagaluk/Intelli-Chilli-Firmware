@@ -7,18 +7,11 @@
 #include "utility/socket.h"
 
 #include "protocol.h"
-#include "parser.h"
-#include "slowcooker.h"
-#include "router.h"
 
 // These are the interrupt and control pins
 #define ADAFRUIT_CC3000_IRQ   3  // MUST be an interrupt pin!
 #define ADAFRUIT_CC3000_VBAT  5
 #define ADAFRUIT_CC3000_CS    10
-
-#define TEMP_SENSOR_PIN 0
-#define HEATER_IO 1
-#define LID_SWITCH 6
 
 #define WLAN_SSID       "Loft21"
 #define WLAN_PASS       "silkylotus997"
@@ -28,7 +21,6 @@
 #define BUFFER_SIZE 25
 
 bool displayConnectionDetails(void);
-void eventCallback(StatusEvent event);
 
 // Use hardware SPI for the remaining pins
 // On an UNO, SCK = 13, MISO = 12, and MOSI = 11
@@ -39,21 +31,15 @@ Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS,
                                         );
 
 Adafruit_CC3000_Server echoServer(LISTEN_PORT);
-SlowCooker slowcooker(HEATER_IO,TEMP_SENSOR_PIN,LID_SWITCH,&eventCallback);
-PacketRouter router(slowcooker);
 
 uint8_t buffer[BUFFER_SIZE];
-uint8_t sendBuffer[BUFFER_SIZE];
-Message msg;
 
-
+Message message;
 
 void setup(void)
 {
   Serial.begin(115200);
   Serial.println(F("Hello, CC3000!\n")); 
-
-  slowcooker.setup();
 
   Serial.print("Free RAM: "); Serial.println(getFreeRam(), DEC);
   
@@ -89,14 +75,8 @@ void setup(void)
   Serial.println(F("Listening for connections..."));
 }
 
-
-
-
 void loop(void)
 {
-
-  slowcooker.loop();
-
   // Try to get a client which is connected.
   Adafruit_CC3000_ClientRef client = echoServer.available();
   if (client) {
@@ -104,37 +84,16 @@ void loop(void)
     uint16_t dataAvailable = client.available();
      // Check if there is data available to read.
      if (dataAvailable > 0) {
+       Serial.print("Data Available:");
+       Serial.println(dataAvailable);
 
        uint8_t bRead = client.read(buffer,BUFFER_SIZE,0);
-       if(parse_packet(buffer,bRead,&msg)){
-        uint8_t sendLen = router.route(msg,sendBuffer);
 
-        if(sendLen > 0){
-          client.write(sendBuffer,sendLen);
-          delay(300);
-        }
-
-       }else{
-        Serial.println("failed to parse packet");
-       }
+       client.write("OK",2);
 
        client.close();
      }
   }
-}
-
-void eventCallback(StatusEvent event){
-  switch(event){
-    case EVENT_LID_OPENED:
-      Serial.println("EVENT: LID Openned.");
-      break;
-    case EVENT_LID_CLOSED:
-      Serial.println("EVENT: LID Closed.");
-      break;
-    case EVENT_COOK_END:
-      Serial.println("EVENT: Cook finished turning off.");
-      break;
-  };
 }
 
 /**************************************************************************/

@@ -26,21 +26,18 @@ bool parse_packet(uint8_t* payload, uint8_t len, Message* msg){
   if(len < 3)
     return false;
 
-  if(!command_valid(payload[0]))
+  const uint8_t packetLen = payload[0];
+
+  if(len < packetLen)
     return false;
 
-  const uint8_t payloadLen = payload[1];
-
-  if(len < payloadLen+3)
+  if(!command_valid(payload[1]))
     return false;
 
-  if(!check_crc(payload,payloadLen+3))
-    return false;
-
-  msg->type = (CommandType)payload[0];
-  msg->length = payload[1];
+  msg->length = payload[0];
+  msg->type = (CommandType)payload[1];
   msg->payload = &payload[2];
-  msg->crc = payload[payloadLen+2];
+  msg->crc = payload[packetLen-1];
   
   return true;
 }

@@ -33,8 +33,8 @@ enum LidState {
 #pragma pack(push, 1)
 
 struct Message {
-  CommandType type;
   uint8_t length;
+  CommandType type;
   uint8_t* payload;
   uint8_t crc;
 };
@@ -44,11 +44,11 @@ struct Message_Ping {
 };
 
 struct Message_SetCookDelay {
-  int delay;
+  uint16_t delay;
 };
 
 struct Message_SetCookTime {
-  int time;
+  uint16_t time;
 };
 
 struct Message_SetCookTemp {
