@@ -6,12 +6,10 @@
 enum CommandType {
   CMD_ACK,
   CMD_PING,
-  CMD_SET_COOK_DELAY,
   CMD_SET_COOK_TIME,
   CMD_SET_COOK_TEMP,
-  CMD_START_COOk,
-  CMD_TURN_OFF,
-  CMD_TURN_ON,
+  CMD_START_COOK,
+  CMD_STOP_COOK,
   CMD_RESET,
   CMD_RETURN_STATE,
   CMD_EVENT
@@ -43,10 +41,6 @@ struct Message_Ping {
 
 };
 
-struct Message_SetCookDelay {
-  uint16_t delay;
-};
-
 struct Message_SetCookTime {
   uint16_t time;
 };
@@ -72,8 +66,6 @@ struct Message_Reset {
 };
 
 struct Message_ReturnState {
-  uint16_t delayTime;
-  uint16_t delayTimeLeft;
   uint16_t cookTime;
   uint16_t cookTimeLeft;
   uint8_t cookTemp;

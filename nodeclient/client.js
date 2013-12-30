@@ -20,7 +20,7 @@ function onConnect(){
 }
 
 function sendPacket(){
-  var buf = new Buffer([0x05,0x03,0x00,0x05,0xEE]);
+  var buf = new Buffer([0x03,0x06,0xEE]);
   client.write(buf);
 }
 
