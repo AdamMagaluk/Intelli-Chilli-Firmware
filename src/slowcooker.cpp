@@ -1,8 +1,11 @@
 #include <Arduino.h>
+#include <OneWire.h>
+#include <Time.h>
+#include <DallasTemperature.h>
 
 #include "slowcooker.h"
 
-SlowCooker::SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(int)) :
+SlowCooker::SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(StatusEvent)) :
   m_heaterRelayPin(heaterRelay),
   m_tempSensorPin(tempSensor),
   m_lidSwitchPin(lidSwitch),
@@ -10,27 +13,80 @@ SlowCooker::SlowCooker(const int& heaterRelay, const int& tempSensor, const int&
   m_cookTime(DEFAULT_COOK_TIME),
   m_cookTemp(DEFAULT_COOK_TEMP),
   m_state(STATE_NOT_COOKING),
-  m_heaterActive(false)
+  m_heaterActive(false),
+  m_oneWire(m_tempSensorPin),
+  m_sensor(&m_oneWire)
 { 
   // start with heater off
-  setHeaterState(LOW);
+  
 }
 
-uint8_t SlowCooker::readTemp(){
-  // analog read 
-  uint8_t val = analogRead(m_tempSensorPin);
-  return val;
+void SlowCooker::setup(){
+  pinMode(m_heaterRelayPin, OUTPUT);
+  pinMode(m_lidSwitchPin, INPUT);
+
+  setHeaterState(LOW);
+  initTempSensor();
 }
 
 // run once in main loop, handles reading pin vals
 // setting heater on/off
 void SlowCooker::loop(){
+  m_lastLidState = m_lidState;
   m_lidState = digitalRead(m_lidSwitchPin);
-  m_currentTemp = readTemp();
+  m_currentTemp = readTemp(); // float in C
 
-  if(m_state == STATE_NOT_COOKING){
-    
+  if(m_state == STATE_NOT_COOKING)
+    return;
+
+  Serial.print("Current Temp:");
+  Serial.print(m_currentTemp);
+  Serial.print(" ");
+  Serial.print(m_cookTemp);
+  Serial.println("");
+
+  // turn heater on/off based on temp.
+  if(m_currentTemp >= m_cookTemp){
+    if(m_heaterActive)
+      Serial.println("Turning Heater Off");
+    setHeaterState(false);
+  }else if(m_currentTemp <= m_cookTemp-1){
+    if(!m_heaterActive)
+      Serial.println("Turning Heater On");
+    setHeaterState(true);
   }
+
+
+  // check if cook is finished based on start time.
+  // if cook time is zero then it will run forever!!!
+  if(m_cookTime != 0){
+    long sLeft = ((m_cookTime * 60 * 1000) - (millis() - m_timeCookStarted))/1000;
+    if(sLeft <= 0){
+      stopCook();
+      m_eventCallback(EVENT_COOK_END);
+    }
+  }
+
+  // send event if lid has been opened or closed.
+  if(m_lastLidState && !m_lidState){
+    m_eventCallback(EVENT_LID_CLOSED);
+  }else if(!m_lastLidState && m_lidState){
+    m_eventCallback(EVENT_LID_OPENED);
+  }
+
+}
+
+void SlowCooker::initTempSensor(){
+  m_sensor.getDeviceCount();
+}
+
+float SlowCooker::readTemp(){
+  m_sensor.requestTemperatures();
+  float uncalibratedTemp = m_sensor.getTempCByIndex(0);
+
+  // @todo callibrate temp sensor to food temp.
+
+  return uncalibratedTemp;
 }
 
 // resets cook time to 0:00
@@ -40,9 +96,16 @@ void SlowCooker::resetToDefault() {
   m_cookTemp = DEFAULT_COOK_TEMP;
 }
 
+void SlowCooker::setHeaterState(bool state) {
+  m_heaterActive = state;
+  // set heater pin
+  digitalWrite(m_heaterRelayPin, state);
+}
+
 // start cooking, at current temp and start counting down time.
 bool SlowCooker::startCook() {
   m_state = STATE_COOKING;
+  m_timeCookStarted = millis();
 }
 
 // stops cooking, resets counter.
@@ -52,18 +115,18 @@ bool SlowCooker::stopCook() {
   setHeaterState(LOW);
 }
 
-bool SlowCooker::setCookTime(const uint16_t& time) {
-  m_cookTime = time;
+bool SlowCooker::setCookTime(const uint16_t& minutes) {
+  if(minutes > 1440)
+    return false;
+  
+  m_cookTime = minutes;
+  m_timeCookStarted = millis();
+
+  return true;
 }
 
 bool SlowCooker::setCookTemp(const uint8_t& temp) {
   m_cookTemp = temp;
-}
-
-void SlowCooker::setHeaterState(bool state) {
-  m_heaterActive = state;
-  // set heater pin
-  digitalWrite(m_heaterRelayPin, state);
 }
 
 uint16_t SlowCooker::CookTime() const {
@@ -71,7 +134,7 @@ uint16_t SlowCooker::CookTime() const {
 }
 
 uint16_t SlowCooker::CookTimeLeft() const {
-  // 
+  return ((m_cookTime * 60 * 1000) - (millis() - m_timeCookStarted))/1000/60;
 }
 
 uint8_t SlowCooker::CookTemp() const {

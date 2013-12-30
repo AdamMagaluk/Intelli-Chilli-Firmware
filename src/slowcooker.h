@@ -2,8 +2,12 @@
 #define SLOWCOOKER_H
 
 #include <stdint.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
-#define DEFAULT_COOK_TEMP 60
+#include "protocol.h"
+
+#define DEFAULT_COOK_TEMP 27
 #define DEFAULT_COOK_TIME 0
 
 class SlowCooker {
@@ -14,7 +18,7 @@ public:
     STATE_COOKING // on and cooking
   };
 
-  SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(int));
+  SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(StatusEvent));
 
   // level warm/low/med/high -> temp setting
   // cook time -> time in minutes to stay on
@@ -46,28 +50,42 @@ public:
   // setting heater on/off
   void loop();
 
+  void setup();
+
 protected:
 
   const int m_heaterRelayPin;
   const int m_tempSensorPin;
   const int m_lidSwitchPin;
 
+  unsigned long m_timeCookStarted;
   uint16_t m_cookTime;
-  uint16_t m_cookTimeLeft;
     
   uint8_t m_cookTemp;
-  uint8_t m_currentTemp;
+  float m_currentTemp;
 
   bool m_lidState;
+  bool m_lastLidState;
+
   bool m_heaterActive;
 
   State m_state;
 
-  void (*m_eventCallback)(int);
+  // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+  OneWire m_oneWire;
+
+  // Pass our oneWire reference to Dallas Temperature. 
+  DallasTemperature m_sensor;
+
+  DeviceAddress m_sensorAddr;
+
+  void (*m_eventCallback)(StatusEvent);
 
   void setHeaterState(bool state);
 
-  uint8_t readTemp();
+  void initTempSensor();
+
+  float readTemp();
 
 };
 
