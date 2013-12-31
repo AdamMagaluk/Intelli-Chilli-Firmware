@@ -47,7 +47,6 @@ uint8_t sendBuffer[BUFFER_SIZE];
 Message msg;
 
 
-
 void setup(void)
 {
   Serial.begin(115200);
@@ -107,8 +106,8 @@ void loop(void)
 
        uint8_t bRead = client.read(buffer,BUFFER_SIZE,0);
        if(parse_packet(buffer,bRead,&msg)){
-        uint8_t sendLen = router.route(msg,sendBuffer);
 
+        uint8_t sendLen = router.route(msg,sendBuffer);
         if(sendLen > 0){
           client.write(sendBuffer,sendLen);
           delay(300);

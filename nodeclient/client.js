@@ -1,28 +1,24 @@
-var net = require('net');
-var client = net.connect({host:'192.168.1.16',port: 3000},onConnect);
+var dgram = require('dgram');
+var message = new Buffer("Some bytes");
+var client = dgram.createSocket("udp4");
 
-client.on('data', function(data) {
-  console.log(data.toString());
-  client.end();
-});
 
-client.on('error', function(err) {
-  console.log(err);
-});
+function sendPacket(done){
 
-client.on('end', function() {
-  console.log('client disconnected');
-});
+  client.once("error", function (err) {
+    console.log("server error:\n" + err.stack);
+    client.close();
+  });
 
-function onConnect(){
-  console.log('client connected');
-  sendPacket();
+  var buf = new Buffer([0x03,0x07,0xEE]);
+  client.send(buf, 0, buf.length, 3000, "10.0.1.24", function(err, bytes) {
+    client.once("message", function (msg, rinfo) {
+      console.log(msg);
+      client.close();
+    });
+  });
 }
 
-function sendPacket(){
-  var buf = new Buffer([0x03,0x06,0xEE]);
-  client.write(buf);
-}
-
+sendPacket();
 
 

@@ -39,12 +39,6 @@ void SlowCooker::loop(){
   if(m_state == STATE_NOT_COOKING)
     return;
 
-  Serial.print("Current Temp:");
-  Serial.print(m_currentTemp);
-  Serial.print(" ");
-  Serial.print(m_cookTemp);
-  Serial.println("");
-
   // turn heater on/off based on temp.
   if(m_currentTemp >= m_cookTemp){
     if(m_heaterActive)
@@ -55,7 +49,6 @@ void SlowCooker::loop(){
       Serial.println("Turning Heater On");
     setHeaterState(true);
   }
-
 
   // check if cook is finished based on start time.
   // if cook time is zero then it will run forever!!!
@@ -77,7 +70,9 @@ void SlowCooker::loop(){
 }
 
 void SlowCooker::initTempSensor(){
-  m_sensor.getDeviceCount();
+  int dc = m_sensor.getDeviceCount();
+  if(dc == 0)
+    Serial.println("unable to find temp sensor.");
 }
 
 float SlowCooker::readTemp(){

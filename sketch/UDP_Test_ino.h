@@ -2,6 +2,7 @@
   
  ****************************************************/
 #include <Adafruit_CC3000_UDP_Server.h>
+
 #include <Adafruit_CC3000.h>
 #include <SPI.h>
 #include "utility/debug.h"
@@ -110,7 +111,11 @@ void loop(void)
   if (echoServer.available()) {
     sockaddr_in remote;
     int bytesRead = echoServer.read(buf, 512, (sockaddr *)&remote);
-    Serial.println(buf);
+    
+    for(int i=0;i<bytesRead;i++)
+      Serial.print(buf[i]);
+    Serial.println("");
+
     echoServer.write(buf, bytesRead, (sockaddr *)&remote);
   }
 }
