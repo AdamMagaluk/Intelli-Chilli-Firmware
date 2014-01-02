@@ -32,6 +32,7 @@
 
 bool displayConnectionDetails(void);
 void eventCallback(StatusEvent event);
+void sendEvent(StatusEvent event);
 
 // Use hardware SPI for the remaining pins
 // On an UNO, SCK = 13, MISO = 12, and MOSI = 11
@@ -47,6 +48,7 @@ PacketRouter router(slowcooker);
 
 uint8_t buffer[BUFFER_SIZE];
 uint8_t sendBuffer[BUFFER_SIZE];
+uint8_t eventBuffer[] = {0x04,CMD_EVENT,0x00,0xAA};
 Message msg;
 
 Adafruit_CC3000_UDP_Server echoServer = Adafruit_CC3000_UDP_Server(LISTEN_PORT);
@@ -89,13 +91,13 @@ void setup(void)
 
   // Start listening for connections
   echoServer.begin();
+  sendEvent(EVENT_POWERED_ON);
   
   Serial.println(F("Listening for connections..."));
 }
 
 void loop(void)
 {
-
   // run slowcookers main loop
   slowcooker.loop();
 
@@ -120,33 +122,45 @@ void loop(void)
         }
         Serial.println();
         
-        echoServer.write(sendBuffer, sendLen+3, (sockaddr *)&remote);
+        echoServer.write(sendBuffer, sendLen+4, (sockaddr *)&remote);
       }
 
     }else{
       echoServer.write("Invalid Packet",14, (sockaddr *)&remote);
     }
-    /*for(int i = 0; i < bytesRead; i++) {
-      Serial.print(buffer[i]);
-    }*/
-    //echoServer.write(buffer, bytesRead, (sockaddr *)&remote);
   }
+  
 }
 
 void eventCallback(StatusEvent event){
   switch(event){
     case EVENT_LID_OPENED:
       Serial.println("EVENT: LID Openned.");
+      sendEvent(EVENT_LID_OPENED);
       break;
     case EVENT_LID_CLOSED:
+      sendEvent(EVENT_LID_CLOSED);
       Serial.println("EVENT: LID Closed.");
       break;
     case EVENT_COOK_END:
+      sendEvent(EVENT_COOK_END);
       Serial.println("EVENT: Cook finished turning off.");
       break;
   };
 }
 
+
+void sendEvent(StatusEvent event){
+  Adafruit_CC3000_Client client = cc3000.connectUDP(4294967295, 3000);
+  if (client.connected()) {
+    eventBuffer[2] = event;
+    client.write(eventBuffer,5);
+    client.close();
+  } else {
+    Serial.println(F("Connection failed"));   
+    return;
+  }
+}
 
 /**************************************************************************/
 /*!

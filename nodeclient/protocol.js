@@ -44,7 +44,7 @@ module.exports.parse = function(buffer){
   return {
     length : buffer[0],
     type : buffer[1],
-    data : buffer.slice(2,buffer.length-1)
+    data : buffer.slice(2,buffer.length-2)
   };
 };
 

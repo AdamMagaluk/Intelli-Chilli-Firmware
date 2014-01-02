@@ -70,9 +70,7 @@ void SlowCooker::loop(){
 }
 
 void SlowCooker::initTempSensor(){
-  int dc = m_sensor.getDeviceCount();
-  if(dc == 0)
-    Serial.println("unable to find temp sensor.");
+  m_sensor.getDeviceCount();
 }
 
 float SlowCooker::readTemp(){
@@ -136,7 +134,7 @@ uint16_t SlowCooker::CookTimeLeft() const {
   if(m_cookTime == 0)
     return 0;
 
-  return (m_cookTime * 60) - ((millis() - m_timeCookStarted)/1000);
+  return ((m_cookTime * 60) - ((millis() - m_timeCookStarted)/1000))/60;
 }
 
 uint8_t SlowCooker::CookTemp() const {
