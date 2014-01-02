@@ -1,6 +1,6 @@
 {
-  "name": "nodeclient",
-  "version": "0.0.0",
+  "name": "intelli-chilli-client",
+  "version": "0.0.1",
   "description": "Intelli-Chilli nodejs client.",
   "main": "client.js",
   "scripts": {
