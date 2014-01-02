@@ -114,9 +114,10 @@ void loop(void)
         sendBuffer[sendLen+2] = 0xAA;
 
         Serial.print("Sending Back:");
-        for(int i=0;i<sendLen+3;i++)
+        for(int i=0;i<sendLen+3;i++){
           Serial.print(sendBuffer[i],HEX);
-        Serial.print(" ");
+          Serial.print(" ");
+        }
         Serial.println();
         
         echoServer.write(sendBuffer, sendLen+3, (sockaddr *)&remote);

@@ -53,7 +53,7 @@ void SlowCooker::loop(){
   // check if cook is finished based on start time.
   // if cook time is zero then it will run forever!!!
   if(m_cookTime != 0){
-    long sLeft = ((m_cookTime * 60 * 1000) - (millis() - m_timeCookStarted))/1000;
+    long sLeft = (m_cookTime * 60) - ((millis() - m_timeCookStarted)/1000);
     if(sLeft <= 0){
       stopCook();
       m_eventCallback(EVENT_COOK_END);
@@ -136,7 +136,7 @@ uint16_t SlowCooker::CookTimeLeft() const {
   if(m_cookTime == 0)
     return 0;
 
-  return ((m_cookTime * 60 * 1000) - (millis() - m_timeCookStarted))/1000/60;
+  return (m_cookTime * 60) - ((millis() - m_timeCookStarted)/1000);
 }
 
 uint8_t SlowCooker::CookTemp() const {

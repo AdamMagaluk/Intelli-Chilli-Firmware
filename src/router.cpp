@@ -31,16 +31,24 @@ uint8_t PacketRouter::route(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_ping(Message& msg,uint8_t* retBuffer){
+  Serial.println("handle_ping");
+
   retBuffer[0] = 'O';
   retBuffer[1] = 'K';
   return 2;
 }
 
 uint8_t PacketRouter::handle_setCookTime(Message& msg,uint8_t* retBuffer){
+  
+
   if(msg.length-3 != 2)
     return 0;
 
-  m_slowcooker.setCookTime((msg.payload[0] << 8) + msg.payload[1]);
+  int t = (msg.payload[0] << 8) + msg.payload[1];
+  Serial.print("handle_setCookTime:");
+  Serial.println(t);
+
+  m_slowcooker.setCookTime(t);
 
   retBuffer[0] = 'O';
   retBuffer[1] = 'K';
@@ -51,7 +59,11 @@ uint8_t PacketRouter::handle_setCookTemp(Message& msg,uint8_t* retBuffer){
   if(msg.length-3 != 1)
     return 0;
 
-  m_slowcooker.setCookTemp(msg.payload[0]);
+  int t = msg.payload[0];
+  Serial.print("handle_setCookTemp:");
+  Serial.println(t);
+  
+  m_slowcooker.setCookTemp(t);
 
   retBuffer[0] = 'O';
   retBuffer[1] = 'K';
@@ -59,6 +71,7 @@ uint8_t PacketRouter::handle_setCookTemp(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_startCook(Message& msg,uint8_t* retBuffer){
+  Serial.println("handle_startCook");
   m_slowcooker.startCook();
 
   retBuffer[0] = 'O';
@@ -67,6 +80,7 @@ uint8_t PacketRouter::handle_startCook(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_stopCook(Message& msg,uint8_t* retBuffer){
+  Serial.println("handle_stopCook");
   m_slowcooker.stopCook();
 
   retBuffer[0] = 'O';
@@ -75,7 +89,7 @@ uint8_t PacketRouter::handle_stopCook(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_reset(Message& msg,uint8_t* retBuffer){
-    
+  Serial.println("handle_reset");
   // for now do it without a wdt.
   asm volatile ("  jmp 0");
 
@@ -95,13 +109,15 @@ struct Message_ReturnState {
 };
 */
 uint8_t PacketRouter::handle_returnState(Message& msg,uint8_t* retBuffer){
+  Serial.println("handle_returnState");
   uint16_t b = m_slowcooker.CookTime();
-  retBuffer[0] = ((b >> (16)) & 0xff); // cook time msb
-  retBuffer[1] = ((b >> (8)) & 0xff); // cook time lsb
+  
+  retBuffer[0] = ((b >> (8)) & 0xff); // cook time msb
+  retBuffer[1] = ((b >> (0)) & 0xff); // cook time lsb
 
   b = m_slowcooker.CookTimeLeft();
-  retBuffer[2] = ((b >> (16)) & 0xff); // cook timeleft msb
-  retBuffer[3] = ((b >> (8)) & 0xff); // cook timeleft lsb
+  retBuffer[2] = ((b >> (8)) & 0xff); // cook timeleft msb
+  retBuffer[3] = ((b >> (0)) & 0xff); // cook timeleft lsb
 
   retBuffer[4] = m_slowcooker.CookTemp(); // cook temp
   retBuffer[5] = m_slowcooker.CurrentTemp(); // current temp
