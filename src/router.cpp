@@ -107,8 +107,10 @@ uint8_t PacketRouter::handle_returnState(Message& msg,uint8_t* retBuffer){
   retBuffer[5] = m_slowcooker.CurrentTemp(); // current temp
 
   retBuffer[6] = m_slowcooker.isLidOpen(); // lid state
+  retBuffer[7] = m_slowcooker.isCooking(); // lid state
+  retBuffer[8] = m_slowcooker.isHeaterActive(); // lid state
 
-  return 7;
+  return 9;
 }
 
 void PacketRouter::printMessage(const Message& msg){

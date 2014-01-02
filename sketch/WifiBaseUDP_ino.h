@@ -19,8 +19,8 @@
 #define ADAFRUIT_CC3000_CS    10
 
 #define TEMP_SENSOR_PIN 2
-#define HEATER_IO 1
-#define LID_SWITCH 6
+#define HEATER_IO 4
+#define LID_SWITCH 7
 
 #define WLAN_SSID       "Kulagam"
 #define WLAN_PASS       "muskrat!"
@@ -106,13 +106,20 @@ void loop(void)
     bool valid = parse_packet(buffer, bytesRead, &msg);
     if(valid) {
       
-      uint8_t sendLen = router.route(msg,sendBuffer);
+      uint8_t sendLen = router.route(msg,sendBuffer+2);
       if(sendLen > 0){
+        
+        sendBuffer[0] = sendLen+3;
+        sendBuffer[1] = CMD_ACK;
+        sendBuffer[sendLen+2] = 0xAA;
+
         Serial.print("Sending Back:");
-        for(int i=0;i<sendLen;i++)
-          Serial.print(sendBuffer[i]);
+        for(int i=0;i<sendLen+3;i++)
+          Serial.print(sendBuffer[i],HEX);
+        Serial.print(" ");
         Serial.println();
-        echoServer.write(sendBuffer, sendLen, (sockaddr *)&remote);
+        
+        echoServer.write(sendBuffer, sendLen+3, (sockaddr *)&remote);
       }
 
     }else{

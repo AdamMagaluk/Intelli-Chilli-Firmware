@@ -46,6 +46,8 @@ public:
 
   bool isHeaterActive() const;
 
+  bool isCooking();
+
   // run once in main loop, handles reading pin vals
   // setting heater on/off
   void loop();

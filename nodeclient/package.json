@@ -1,0 +1,14 @@
+{
+  "name": "nodeclient",
+  "version": "0.0.0",
+  "description": "Intelli-Chilli nodejs client.",
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Adam Magaluk <AdamMagaluk@gmail.com>",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "extend": "~1.2.1"
+  }
+}

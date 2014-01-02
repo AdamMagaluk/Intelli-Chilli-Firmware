@@ -97,6 +97,10 @@ void SlowCooker::setHeaterState(bool state) {
   digitalWrite(m_heaterRelayPin, state);
 }
 
+bool SlowCooker::isCooking(){
+  return (m_state == STATE_COOKING);
+}
+
 // start cooking, at current temp and start counting down time.
 bool SlowCooker::startCook() {
   m_state = STATE_COOKING;
@@ -129,6 +133,9 @@ uint16_t SlowCooker::CookTime() const {
 }
 
 uint16_t SlowCooker::CookTimeLeft() const {
+  if(m_cookTime == 0)
+    return 0;
+
   return ((m_cookTime * 60 * 1000) - (millis() - m_timeCookStarted))/1000/60;
 }
 
