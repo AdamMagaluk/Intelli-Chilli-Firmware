@@ -88,25 +88,21 @@ void setup(void)
   Serial.println(" devices.");
 
   // search for devices on the bus and assign based on an index
-  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
+  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0");
     
   sensors.setResolution(insideThermometer, 12);  
 
-  Serial.print("Device insideThermometer ");
-  printAlarmInfo(insideThermometer);
-  Serial.println();
-  
   // set alarm ranges
-  Serial.println("Setting alarm temps...");
-  sensors.setHighAlarmTemp(insideThermometer, 25);
-  sensors.setLowAlarmTemp(insideThermometer, 23);
+  //Serial.println("Setting alarm temps...");
+  //sensors.setHighAlarmTemp(insideThermometer, 25);
+  //sensors.setLowAlarmTemp(insideThermometer, 23);
   
-  Serial.print("New insideThermometer ");
-  printAlarmInfo(insideThermometer);
-  Serial.println();
+  //Serial.print("New insideThermometer ");
+  //printAlarmInfo(insideThermometer);
+  //Serial.println();
 
   // attach alarm handler
-  sensors.setAlarmHandler(&newAlarmHandler);
+  //sensors.setAlarmHandler(&newAlarmHandler);
 
 }
 
@@ -115,24 +111,9 @@ void loop(void)
   // ask the devices to measure the temperature
   sensors.requestTemperatures();
   
-  // if an alarm condition exists as a result of the most recent 
-  // requestTemperatures() request, it exists until the next time 
-  // requestTemperatures() is called AND there isn't an alarm condition
-  // on the device
-  if (sensors.hasAlarm())
-  {
-    Serial.println("Oh noes!  There is at least one alarm on the bus.");
-  }
-
-  // call alarm handler function defined by sensors.setAlarmHandler
-  // for each device reporting an alarm
-  sensors.processAlarms();
-
-  if (!sensors.hasAlarm())
-  {
-    // just print out the current temperature
-    printCurrentTemp(insideThermometer);
-  }
+  // just print out the current temperature
+  printCurrentTemp(insideThermometer);
+  
   
   delay(300);
 }

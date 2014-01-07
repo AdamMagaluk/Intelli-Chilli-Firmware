@@ -8,7 +8,6 @@ program
   .option('-p, --port [port]', 'Host port address',3000)
   .parse(process.argv);
 
-
 var commands = {
   start : startCook,
   stop : stopCook,
@@ -25,7 +24,8 @@ if(typeof commands[program.args[0]] !== 'function'){
 
 
 var c = new Client({address : program.address,
-                    port : program.port
+                    port : program.port,
+		    timeout : 1000
                   });
 
 

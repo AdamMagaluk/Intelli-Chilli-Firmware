@@ -7,9 +7,6 @@ PacketRouter::PacketRouter(SlowCooker& slowcooker) :
 }
 
 uint8_t PacketRouter::route(Message& msg,uint8_t* retBuffer){
-  
-  printMessage(msg);
-
   switch(msg.type){
     case CMD_PING:
       return handle_ping(msg,retBuffer);
@@ -31,8 +28,6 @@ uint8_t PacketRouter::route(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_ping(Message& msg,uint8_t* retBuffer){
-  Serial.println("handle_ping");
-
   retBuffer[0] = 'O';
   retBuffer[1] = 'K';
   return 2;
@@ -45,8 +40,6 @@ uint8_t PacketRouter::handle_setCookTime(Message& msg,uint8_t* retBuffer){
     return 0;
 
   int t = (msg.payload[0] << 8) + msg.payload[1];
-  Serial.print("handle_setCookTime:");
-  Serial.println(t);
 
   m_slowcooker.setCookTime(t);
 
@@ -60,8 +53,6 @@ uint8_t PacketRouter::handle_setCookTemp(Message& msg,uint8_t* retBuffer){
     return 0;
 
   int t = msg.payload[0];
-  Serial.print("handle_setCookTemp:");
-  Serial.println(t);
   
   m_slowcooker.setCookTemp(t);
 
@@ -71,7 +62,6 @@ uint8_t PacketRouter::handle_setCookTemp(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_startCook(Message& msg,uint8_t* retBuffer){
-  Serial.println("handle_startCook");
   m_slowcooker.startCook();
 
   retBuffer[0] = 'O';
@@ -80,7 +70,6 @@ uint8_t PacketRouter::handle_startCook(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_stopCook(Message& msg,uint8_t* retBuffer){
-  Serial.println("handle_stopCook");
   m_slowcooker.stopCook();
 
   retBuffer[0] = 'O';
@@ -89,7 +78,6 @@ uint8_t PacketRouter::handle_stopCook(Message& msg,uint8_t* retBuffer){
 }
 
 uint8_t PacketRouter::handle_reset(Message& msg,uint8_t* retBuffer){
-  Serial.println("handle_reset");
   // for now do it without a wdt.
   asm volatile ("  jmp 0");
 
@@ -109,7 +97,6 @@ struct Message_ReturnState {
 };
 */
 uint8_t PacketRouter::handle_returnState(Message& msg,uint8_t* retBuffer){
-  Serial.println("handle_returnState");
   uint16_t b = m_slowcooker.CookTime();
   
   retBuffer[0] = ((b >> (8)) & 0xff); // cook time msb
@@ -129,8 +116,9 @@ uint8_t PacketRouter::handle_returnState(Message& msg,uint8_t* retBuffer){
   return 9;
 }
 
+
 void PacketRouter::printMessage(const Message& msg){
-  Serial.print("Message Type:0x");
+/*  Serial.print("Message Type:0x");
   Serial.println(msg.type,HEX);
 
   Serial.print("    Data Len:");
@@ -145,4 +133,5 @@ void PacketRouter::printMessage(const Message& msg){
 
   Serial.print("         CRC:0x");
   Serial.println(msg.crc,HEX);
+  */
 }

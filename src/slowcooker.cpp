@@ -42,11 +42,11 @@ void SlowCooker::loop(){
   // turn heater on/off based on temp.
   if(m_currentTemp >= m_cookTemp){
     if(m_heaterActive)
-      Serial.println("Turning Heater Off");
+      Serial.println(F("Turning Heater Off"));
     setHeaterState(false);
   }else if(m_currentTemp <= m_cookTemp-1){
     if(!m_heaterActive)
-      Serial.println("Turning Heater On");
+      Serial.println(F("Turning Heater On"));
     setHeaterState(true);
   }
 
@@ -70,16 +70,21 @@ void SlowCooker::loop(){
 }
 
 void SlowCooker::initTempSensor(){
+  m_sensor.begin();
+
+  // locate devices on the bus
   m_sensor.getDeviceCount();
+
+  // search for devices on the bus and assign based on an index
+  if (!m_sensor.getAddress(m_sensorAddr, 0)) Serial.println(F("Unable to find address for Device 0"));
+    
+  m_sensor.setResolution(m_sensorAddr, 9);
 }
 
 float SlowCooker::readTemp(){
   m_sensor.requestTemperatures();
-  float uncalibratedTemp = m_sensor.getTempCByIndex(0);
-
-  // @todo callibrate temp sensor to food temp.
-
-  return uncalibratedTemp;
+  float tempC = m_sensor.getTempC(m_sensorAddr);
+  return tempC;
 }
 
 // resets cook time to 0:00
