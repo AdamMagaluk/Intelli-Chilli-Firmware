@@ -44,7 +44,6 @@ Client.prototype._send = function(msg,callback) {
 };
 
 Client.prototype._sendBuffer = function(buffer,callback) {
-  console.log('Sending buffer ' + buffer);
   this._client.send(buffer, 0, buffer.length, this.options.port, this.options.address,callback);
 };
 

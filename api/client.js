@@ -6,7 +6,7 @@ var HueApi = require("node-hue-api").HueApi;
     Packet = Fog.Packet;
 
 var client = new Fog.Client({'endpoint':'ws://thefog.herokuapp.com/'});
-//var client = new Fog.Client({'endpoint':'ws://localhost:3000/'});
+var client = new Fog.Client({'endpoint':'ws://localhost:3000/'});
 var chili = new Client({address:'192.168.1.9'});
 
 client.on('error', function(data) {
@@ -25,10 +25,16 @@ client.on('ACK', function(data) {
   client.send(p);
 });
 
-client.on('PING', function(data) {
-  console.log('Just pinged by server.');
+client.on('PING', function(p) {
+  var start = new Date().getTime();
   chili.ping(function(err) {
-    console.log(arguments);    
+    if(err){
+      var p2 = new Packet({'action':'PING',data : { error : err.message} });  
+      return client.respondTo(p, p2);
+    }
+    var time = new Date().getTime()-start;
+    var p2 = new Packet({'action':'PING',data : {pingTime : time} });
+    return client.respondTo(p, p2);
   });
 });
 
