@@ -75,16 +75,12 @@ client.on('reset', function(p) {
   client.respondTo(p, p2);
 });
 
-
-
 client.on('error', function(p) {
   var p2 = new Packet({'action':'state',data : {
     error : "Timeout reached when trying to communicate with end device"
   }});
   client.respondTo(p, p2);
 });
-
-
 
 udpserver.bind(3000);
 

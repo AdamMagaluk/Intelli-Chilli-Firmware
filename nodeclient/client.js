@@ -39,21 +39,25 @@ Client.prototype._send = function(msg,callback) {
   var self = this;
   
   this._sendBuffer(b,function onSendFinish(){
-    self._recvAck(callback);
+    self._recvAck(callback,b);
   });
 };
 
 Client.prototype._sendBuffer = function(buffer,callback) {
+  console.log('Sending buffer ' + buffer);
   this._client.send(buffer, 0, buffer.length, this.options.port, this.options.address,callback);
 };
 
-Client.prototype._recvAck = function(callback) {
+Client.prototype._recvAck = function(callback,b) {
 
   var self = this;
   var to = setTimeout(onTimeout,this.options.timeout);
+  var toRetry = setTimeout(onRetry,this.options.timeout/2);
 
   function onMessage(data,rinfo){
     clearTimeout(to);
+    clearTimeout(toRetry);
+
     var m = protocol.parse(data);
     if(m === null)
       return callback(new Error('Bad Data'));
@@ -64,6 +68,10 @@ Client.prototype._recvAck = function(callback) {
   function onTimeout(){
     self._client.removeListener('message', onMessage);
     callback(new Error('Timeout'));
+  }
+
+  function onRetry(){
+    self._sendBuffer(b,function onSendFinish(){});
   }
   
   this._client.once("message",onMessage);
