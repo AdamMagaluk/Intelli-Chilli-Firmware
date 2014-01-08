@@ -5,9 +5,9 @@ var HueApi = require("node-hue-api").HueApi;
     hue = require('./hue'),
     Packet = Fog.Packet;
 
-//var client = new Fog.Client({'endpoint':'ws://thefog.herokuapp.com/'});
-var client = new Fog.Client({'endpoint':'ws://localhost:3000/'});
-var chili = new Client({address:'192.168.1.23'});
+var client = new Fog.Client({'endpoint':'ws://thefog.herokuapp.com/'});
+//var client = new Fog.Client({'endpoint':'ws://localhost:3000/'});
+var chili = new Client({address:'192.168.1.9'});
 
 client.on('error', function(data) {
   console.log('error');
@@ -20,7 +20,7 @@ client.open(function() {
 
 client.on('ACK', function(data) {
   var clientId = data.clientId;
-  console.log('subscription acknowledged clientId:'+clientId);
+  console.log('subscription acknowledged');
   var p = new Packet({'action':'PONG', 'data':{'clientId':clientId}});
   client.send(p);
 });
@@ -32,10 +32,14 @@ client.on('PING', function(data) {
   });
 });
 
+client.on('state', function(p) {
+  chili.returnState(function(err,state) {
+    var p2 = new Packet({'action':'state',data : state});
+    client.respondTo(p, p2);
+  });
+});
 
 udpserver.bind(3000);
-udpserver.on('listening',function(err){
-});
 
 udpserver.on('error',function(err){
   console.error(err);
@@ -49,12 +53,10 @@ udpserver.on('powered',function(msg,rinfo){
 
 udpserver.on('cookend',function(msg,rinfo){
 
-
   hue.notification(function(err){
     if(err)
       console.error(err);
   });
-
 
   client.send(new Packet({'action':'cookend',data : { host : rinfo.address }}));
   console.log("Event: (cook end) from " + rinfo.address + ":" + rinfo.port);
