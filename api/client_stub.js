@@ -37,7 +37,7 @@ client.on('state', function(p) {
   var state = {
     cookTime : 0,
     cookTimeLeft : 0,
-    cookTimeRange : [0,(24*60)],
+    cookTimeRange : [0,1440],
     cookTemp : 27,
     cookTempRange : [20,90]
     currentTemp : 26,
@@ -77,7 +77,7 @@ client.on('reset', function(p) {
 
 client.on('error', function(p) {
   var p2 = new Packet({'action':'state',data : {
-    error : "Timeout reached when trying to communicate with end device"
+    error : "Timeout reached when trying to communicate with end device."
   }});
   client.respondTo(p, p2);
 });

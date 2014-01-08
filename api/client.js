@@ -34,10 +34,82 @@ client.on('PING', function(data) {
 
 client.on('state', function(p) {
   chili.returnState(function(err,state) {
+    if(err){
+      var p2 = new Packet({'action':'state',data : { error : err.message} });  
+      return client.respondTo(p, p2);
+    }
+
+    state.cookTimeRange  = [0,(24*60)];
+    state.cookTempRange  = [20,90];
     var p2 = new Packet({'action':'state',data : state});
     client.respondTo(p, p2);
   });
 });
+
+
+client.on('time', function(p) {
+  cillis.setCookTime(p.message.data.time,function(err){
+    if(err){
+      var p2 = new Packet({'action':'time',data : { error : err.message} });  
+      return client.respondTo(p, p2);
+    }
+
+    var p2 = new Packet({'action':'time',data : { time : p.message.data.time} });
+    client.respondTo(p, p2);
+  });
+});
+
+client.on('temp', function(p) {
+  cillis.setCookTemp(p.message.data.temp,function(err){
+    if(err){
+      var p2 = new Packet({'action':'temp',data : { error : err.message} });  
+      return client.respondTo(p, p2);
+    }
+
+    var p2 = new Packet({'action':'temp',data : { temp : p.message.data.temp} });
+    client.respondTo(p, p2);
+  });
+});
+
+client.on('start', function(p) {
+  cillis.startCook(function(err){
+    if(err){
+      var p2 = new Packet({'action':'start',data : { error : err.message} });  
+      return client.respondTo(p, p2);
+    }
+
+    var p2 = new Packet({'action':'start',data : {}});
+    client.respondTo(p, p2);
+  });
+});
+
+client.on('stop', function(p) {
+  cillis.stopCook(function(err){
+    if(err){
+      var p2 = new Packet({'action':'stop',data : { error : err.message} });  
+      return client.respondTo(p, p2);
+    }
+
+    var p2 = new Packet({'action':'stop',data : {}});
+    client.respondTo(p, p2);
+  });
+});
+
+
+client.on('reset', function(p) {
+  cillis.resetDevice(function(err){
+    if(err){
+      var p2 = new Packet({'action':'reset',data : { error : err.message} });  
+      return client.respondTo(p, p2);
+    }
+
+    var p2 = new Packet({'action':'reset',data : {}});
+    client.respondTo(p, p2);
+  });
+});
+
+
+
 
 udpserver.bind(3000);
 

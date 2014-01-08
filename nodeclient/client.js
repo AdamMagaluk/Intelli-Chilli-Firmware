@@ -15,7 +15,7 @@ function Client(opts){
   this.options = {
     address : '127.0.0.1',
     port : 3000,
-    timeout : 500
+    timeout : 1000
   };
   extend(this.options,opts);
 
@@ -60,14 +60,14 @@ Client.prototype._recvAck = function(callback,b) {
 
     var m = protocol.parse(data);
     if(m === null)
-      return callback(new Error('Bad Data'));
+      return callback(new Error('Failed to parse the return packet.'));
 
     return callback(null,m);
   }
 
   function onTimeout(){
     self._client.removeListener('message', onMessage);
-    callback(new Error('Timeout'));
+    callback(new Error('Timeout reached when trying to communicate with end device.'));
   }
 
   function onRetry(){
@@ -115,7 +115,8 @@ Client.prototype.stopCook = function(callback) {
 };
 
 Client.prototype.resetDevice = function(callback) {
-  this._send({type : protocol.PacketTypes.CMD_RESET},callback);
+  this._send({type : protocol.PacketTypes.CMD_RESET},function(){});
+  callback();
 };
 Client.prototype.returnState = function(callback) {
   this._send({type : protocol.PacketTypes.CMD_RETURN_STATE},function(err,m){
@@ -130,9 +131,9 @@ Client.prototype.returnState = function(callback) {
       cookTimeLeft : (m.data[2] << 8) + m.data[3],
       cookTemp : m.data[4],
       currentTemp : m.data[5],
-      lidState : m.data[6],
-      cooking : m.data[7],
-      heaterOn : m.data[8]
+      lidState : (m.data[6] == 0) ? 'closed' : 'opened',
+      cooking : Boolean(m.data[7]),
+      heaterOn : Boolean(m.data[8])
     };
 
     callback(err,obj);
