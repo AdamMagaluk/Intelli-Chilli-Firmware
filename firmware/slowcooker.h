@@ -1,10 +1,10 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 #ifndef SLOWCOOKER_H
 #define SLOWCOOKER_H
 
 #include <stdint.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-
 #include "protocol.h"
 
 #define DEFAULT_COOK_TEMP 27
