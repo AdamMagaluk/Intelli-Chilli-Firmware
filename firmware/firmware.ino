@@ -24,6 +24,7 @@
  */
 
 
+#include <avr/wdt.h>
 #include <Bridge.h>
 #include <YunServer.h>
 #include <YunClient.h>
@@ -46,6 +47,7 @@ struct HttpCommand {
 
 void eventCallback(StatusEvent event);
 void sendEvent(StatusEvent event);
+void hardwareReset();
 
 /*
  * /arduino/start
@@ -85,9 +87,17 @@ SlowCooker slowcooker(HEATER_IO, TEMP_SENSOR_PIN, LID_SWITCH, &eventCallback);
 // will forward there all the HTTP requests for us.
 YunServer server;
 Process eventProcess;
+bool resetFlag;
+
+#define RESET_PIN 12
 
 void setup() {
+  digitalWrite(RESET_PIN, HIGH);
+  delay(40);
+  pinMode(RESET_PIN,OUTPUT);
+  digitalWrite(RESET_PIN, HIGH);
   
+  resetFlag = false;
   Serial.begin(115200);
   
   Serial.println(F("Initializing..."));
@@ -103,6 +113,7 @@ void setup() {
 
   sendEvent(EVENT_POWERED_ON);
   Serial.println(F("Starting main loop."));
+  
 }
 
 void loop() {
@@ -118,6 +129,10 @@ void loop() {
     process(client);
     // Close connection and free resources.
     client.stop();
+  }
+  
+  if(resetFlag){
+    hardwareReset();
   }
 
   delay(50); // Poll every 50ms
@@ -227,6 +242,8 @@ void handle_stop(YunClient& client) {
 void handle_reset(YunClient& client) {
   HTTP_STATUS(200);
   client.println(F("{}"));
+  
+  resetFlag = true;
 }
 
 void handle_set_time(YunClient& client) {
@@ -268,5 +285,13 @@ void handle_set_temp(YunClient& client) {
   client.print(F("{\"temp\":"));
   client.print(temp);
   client.println(F("}"));
+}
+
+void hardwareReset(){
+  Process p;
+  p.begin("reboot");
+  p.run();
+  delay(500);
+  digitalWrite(RESET_PIN, LOW);
 }
 
