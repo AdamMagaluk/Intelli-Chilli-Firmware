@@ -64,6 +64,10 @@ void handle_reset(YunClient& client);
 void handle_set_time(YunClient& client);
 void handle_set_temp(YunClient& client);
 
+#define HTTP_STATUS(code)   client.print(F("Status: "));client.println(code); \
+                            client.println(F("Content-Type: application/json")); \
+                            client.println();
+
 static struct HttpCommand http_endpoints[] = {
   {"state", handle_state},
   {"ping", handle_ping},
@@ -84,6 +88,9 @@ YunServer server;
 void setup() {
 
   Serial.begin(115200);
+  
+  delay(10000);
+  
   Serial.println(F("Initializing..."));
   //setup slowcooker
   slowcooker.setup();
@@ -125,7 +132,7 @@ void process(YunClient& client) {
   if (command[command.length() - 2] == 0xD && command[command.length() - 1] == 0xA) {
     command = command.substring(0, command.length() - 2);
   }
-
+       
   int i = 0;
   while (1) {
     if (http_endpoints[i].cmd == 0)
@@ -138,8 +145,8 @@ void process(YunClient& client) {
 
     i++;
   }
-  client.println(F("Status: 404"));
-  client.println();
+
+  HTTP_STATUS(404);
   client.println(F("{\"error\":\"Command not found.\"}"));
 }
 
@@ -167,6 +174,9 @@ void sendEvent(StatusEvent event) {
 
 void handle_state(YunClient& client) {
   Serial.println(F("Handle state"));
+  
+  HTTP_STATUS(200);
+  
   client.print(F("{\"cookTime\":"));
   client.print(slowcooker.CookTime());
   client.print(F(",\"cookTimeLeft\":"));
@@ -181,43 +191,52 @@ void handle_state(YunClient& client) {
   client.print(slowcooker.isCooking());
   client.print(F(",\"heaterOn\":"));
   client.print(slowcooker.isHeaterActive());
+    
+  if(!slowcooker.tempSensorFound()){
+    client.print(F(",\"error\":\"No temperature sensor found.\""));
+  }
+  
   client.println(F("}"));
 }
 
 void handle_ping(YunClient& client) {
+  HTTP_STATUS(200);
   client.println(F("{}"));
 }
 
 void handle_start(YunClient& client) {
+  HTTP_STATUS(200);
   slowcooker.startCook();
   client.println(F("{}"));
 }
 
 void handle_stop(YunClient& client) {
+  HTTP_STATUS(200);
   slowcooker.stopCook();
   client.println(F("{}"));
 }
 
 void handle_reset(YunClient& client) {
+  HTTP_STATUS(200);
   client.println(F("{}"));
 }
 
 void handle_set_time(YunClient& client) {
   if(client.available() == 0){
-    client.println(F("Status: 400"));
-    client.println();
+    HTTP_STATUS(400);
     client.println(F("{\"error\":\"Must supply a time value.\"}"));
     return;
   }
   
+  
   int time = client.parseInt();
   if (!slowcooker.setCookTime(time)) {
-    client.println(F("Status: 400"));
-    client.println();
+    HTTP_STATUS(400);
     client.println(F("{\"error\":\"Failed to set cook time.\"}"));
     return;
   }
-
+  
+  HTTP_STATUS(200);
   client.print(F("{\"time\":"));
   client.print(time);
   client.println(F("}"));
@@ -225,20 +244,19 @@ void handle_set_time(YunClient& client) {
 
 void handle_set_temp(YunClient& client) {
   if(client.available() == 0){
-    client.println(F("Status: 400"));
-    client.println();
+    HTTP_STATUS(400);
     client.println(F("{\"error\":\"Must supply a temp value.\"}"));
     return;
   }
   
   int temp = client.parseInt();
   if (!slowcooker.setCookTemp(temp)) {
-    client.println(F("Status: 400"));
-    client.println();
+    HTTP_STATUS(400);
     client.println(F("{\"error\":\"Failed to set cook temp.\"}"));
     return;
   }
-
+  
+  HTTP_STATUS(200);
   client.print(F("{\"temp\":"));
   client.print(temp);
   client.println(F("}"));

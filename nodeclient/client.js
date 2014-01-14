@@ -1,5 +1,7 @@
 var util = require('util')
-  , dgram = require('dgram')
+  , path = require('path')
+  , url = require('url')
+  , request = require('request')
   , events = require('events')
   , extend = require('extend')
   , protocol = require('./protocol');
@@ -13,76 +15,45 @@ module.exports = Client;
 function Client(opts){
   
   this.options = {
-    address : '127.0.0.1',
-    port : 3000,
-    timeout : 1000
+    address : 'arduino.local'
   };
+
   extend(this.options,opts);
 
   events.EventEmitter.call(this);
-
-  this._client = dgram.createSocket("udp4");
-  this._client.on('error',this.emit.bind(this));
 }
+
 util.inherits(Client, events.EventEmitter);
 
-Client.prototype.close = function(buffer,callback) {
-  this._client.close();
-};
-
-Client.prototype._send = function(msg,callback) {
-
-  var b = protocol.serialize(msg); 
-  if(b === null)
-    return callback(new Error('Bad message'));
-
-  var self = this;
+Client.prototype._request = function(resource,val,callback) {
+  var pathname = path.join('/arduino',resource);
   
-  this._sendBuffer(b,function onSendFinish(){
-    self._recvAck(callback,b);
+  if(typeof val === 'function')
+    callback = val;
+  else(val !== undefined)
+    pathname = path.join(pathname,''+val);
+
+  var u = url.format({
+    protocol : 'http',
+    host : this.options.address,
+    pathname : pathname
+  });
+  
+  request(u,function(err,res,body){
+    if(err)
+      return callback(err);
+    
+    try{
+      var json = JSON.parse(body);
+      return callback(err,json);
+    }catch(err){
+      return callback(err);
+    }
   });
 };
 
-Client.prototype._sendBuffer = function(buffer,callback) {
-  this._client.send(buffer, 0, buffer.length, this.options.port, this.options.address,callback);
-};
-
-Client.prototype._recvAck = function(callback,b) {
-
-  var self = this;
-  var to = setTimeout(onTimeout,this.options.timeout);
-  var toRetry = setTimeout(onRetry,this.options.timeout/2);
-
-  function onMessage(data,rinfo){
-    clearTimeout(to);
-    clearTimeout(toRetry);
-
-    var m = protocol.parse(data);
-    if(m === null)
-      return callback(new Error('Failed to parse the return packet.'));
-
-    return callback(null,m);
-  }
-
-  function onTimeout(){
-    self._client.removeListener('message', onMessage);
-    callback(new Error('Timeout reached when trying to communicate with end device.'));
-  }
-
-  function onRetry(){
-    self._sendBuffer(b,function onSendFinish(){});
-  }
-  
-  this._client.once("message",onMessage);
-};
-
-
-
-
-
-
 Client.prototype.ping = function(callback) {
-  this._send({type : protocol.PacketTypes.CMD_PING},callback);
+  this._request('/ping',callback);
 };
 
 Client.prototype.setCookTime = function(time,callback) {
@@ -90,10 +61,7 @@ Client.prototype.setCookTime = function(time,callback) {
   if(time < 0 || time > 1440)
     return callback(new Error('Inavlid cook time'));
 
-  var b = new Buffer(2);
-  b[0] = _word(time,1,2);
-  b[1] = _word(time,2,2);
-  this._send({type : protocol.PacketTypes.CMD_SET_COOK_TIME,data : b},callback);
+  this._request('/time',time,callback);
 };
 
 Client.prototype.setCookTemp = function(tempC,callback) {
@@ -101,42 +69,22 @@ Client.prototype.setCookTemp = function(tempC,callback) {
   if(tempC < 0 || tempC > 120)
     return callback(new Error('Inavlid cook temp.'));
 
-  var b = new Buffer([tempC]);
-  this._send({type : protocol.PacketTypes.CMD_SET_COOK_TEMP,data : b},callback);
+  this._request('/temp',tempC,callback);
 };
 
 Client.prototype.startCook = function(callback) {
-  this._send({type : protocol.PacketTypes.CMD_START_COOK},callback);
+  this._request('/start',callback);
 };
 
 Client.prototype.stopCook = function(callback) {
-  this._send({type : protocol.PacketTypes.CMD_STOP_COOK},callback);
+  this._request('/stop',callback);
 };
 
 Client.prototype.resetDevice = function(callback) {
-  this._send({type : protocol.PacketTypes.CMD_RESET},function(){});
-  callback();
+  this._request('/reset',callback);
 };
 Client.prototype.returnState = function(callback) {
-  this._send({type : protocol.PacketTypes.CMD_RETURN_STATE},function(err,m){
-    if(err)
-      return callback(err);
-
-    if(m.data.length < 7)
-      return callback(new Error('Return packet data malformed'));
-
-    var obj = {
-      cookTime : (m.data[0] << 8) + m.data[1],
-      cookTimeLeft : (m.data[2] << 8) + m.data[3],
-      cookTemp : m.data[4],
-      currentTemp : m.data[5],
-      lidState : (m.data[6] == 0) ? 'closed' : 'opened',
-      cooking : Boolean(m.data[7]),
-      heaterOn : Boolean(m.data[8])
-    };
-
-    callback(err,obj);
-  });
+  this._request('/state',callback);
 };
 
 

@@ -47,6 +47,8 @@ public:
   bool isHeaterActive() const;
 
   bool isCooking();
+  
+  bool tempSensorFound() const;
 
   // run once in main loop, handles reading pin vals
   // setting heater on/off
@@ -55,6 +57,8 @@ public:
   void setup();
 
 protected:
+
+  bool m_tempFound;
 
   const int m_heaterRelayPin;
   const int m_tempSensorPin;

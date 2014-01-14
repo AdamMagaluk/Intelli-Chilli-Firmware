@@ -76,9 +76,18 @@ void SlowCooker::initTempSensor(){
   m_sensor.getDeviceCount();
 
   // search for devices on the bus and assign based on an index
-  if (!m_sensor.getAddress(m_sensorAddr, 0)) Serial.println(F("Unable to find address for Device 0"));
-    
+  if (!m_sensor.getAddress(m_sensorAddr, 0)){
+    m_tempFound = false;
+    Serial.println(F("Unable to find address for Device 0"));
+  }else{
+    m_tempFound = true;
+  }
+
   m_sensor.setResolution(m_sensorAddr, 9);
+}
+
+bool SlowCooker::tempSensorFound() const{
+  return m_tempFound;
 }
 
 float SlowCooker::readTemp(){
