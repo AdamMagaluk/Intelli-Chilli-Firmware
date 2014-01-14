@@ -8,15 +8,15 @@
  calls through the browser.
 
  Possible commands created in this shetch:
- 
+
  * /arduino/start
  * /arduino/stop
  * /arduino/ping
- * /arduino/reset 
+ * /arduino/reset
  * /arduino/state
- * /arduino/time/:val 
+ * /arduino/time/:val
  * /arduino/temp/:val
- 
+
  This example code is part of the public domain
 
  http://arduino.cc/en/Tutorial/Bridge
@@ -41,7 +41,7 @@
 
 struct HttpCommand {
   char* cmd;
-  void (*func)(YunClient);
+  void (*func)(YunClient&);
 };
 
 void eventCallback(StatusEvent event);
@@ -51,50 +51,50 @@ void sendEvent(StatusEvent event);
  * /arduino/start
  * /arduino/stop
  * /arduino/ping
- * /arduino/reset 
+ * /arduino/reset
  * /arduino/state
- * /arduino/time/:val 
+ * /arduino/time/:val
  * /arduino/temp/:val
  */
-void handle_state(YunClient client);
-void handle_ping(YunClient client);
-void handle_start(YunClient client);
-void handle_stop(YunClient client);
-void handle_reset(YunClient client);
-void handle_set_time(YunClient client);
-void handle_set_temp(YunClient client);
+void handle_state(YunClient& client);
+void handle_ping(YunClient& client);
+void handle_start(YunClient& client);
+void handle_stop(YunClient& client);
+void handle_reset(YunClient& client);
+void handle_set_time(YunClient& client);
+void handle_set_temp(YunClient& client);
 
 static struct HttpCommand http_endpoints[] = {
-  {"state",handle_state},
-  {"ping",handle_ping},
-  {"start",handle_start},
-  {"stop",handle_stop},
-  {"reset",handle_reset},
-  {"time",handle_set_time},
-  {"temp",handle_set_temp},
-  {0,0}
+  {"state", handle_state},
+  {"ping", handle_ping},
+  {"start", handle_start},
+  {"stop", handle_stop},
+  {"reset", handle_reset},
+  {"time", handle_set_time},
+  {"temp", handle_set_temp},
+  {0, 0}
 };
 
-SlowCooker slowcooker(HEATER_IO,TEMP_SENSOR_PIN,LID_SWITCH,&eventCallback);
+SlowCooker slowcooker(HEATER_IO, TEMP_SENSOR_PIN, LID_SWITCH, &eventCallback);
 
 // Listen on default port 5555, the webserver on the Yun
 // will forward there all the HTTP requests for us.
 YunServer server;
 
 void setup() {
-  
+
   Serial.begin(115200);
   Serial.println(F("Initializing..."));
   //setup slowcooker
   slowcooker.setup();
-  
+
   Bridge.begin();
-  
+
   // Listen for incoming connection only from localhost
   // (no one from the external network could connect)
   server.listenOnLocalhost();
   server.begin();
-  
+
   sendEvent(EVENT_POWERED_ON);
   Serial.println(F("Starting main loop."));
 }
@@ -102,7 +102,7 @@ void setup() {
 void loop() {
   // handle slow cooker functions.
   slowcooker.loop();
-  
+
   // Get clients coming from server
   YunClient client = server.accept();
 
@@ -117,24 +117,34 @@ void loop() {
   delay(50); // Poll every 50ms
 }
 
-void process(YunClient client) {
+void process(YunClient& client) {
   // read the command
   String command = client.readStringUntil('/');
-  
-  int i=0;
-  while(1){
-    if(http_endpoints[i].cmd == 0)
+
+  // handle /state with no trailing /
+  if (command[command.length() - 2] == 0xD && command[command.length() - 1] == 0xA) {
+    command = command.substring(0, command.length() - 2);
+  }
+
+  int i = 0;
+  while (1) {
+    if (http_endpoints[i].cmd == 0)
       break;
-    
-    if(command == http_endpoints[i].cmd){
+
+    if (command.equals(http_endpoints[i].cmd)) {
       http_endpoints[i].func(client);
       return;
     }
+
+    i++;
   }
+  client.println(F("Status: 404"));
+  client.println();
+  client.println(F("{\"error\":\"Command not found.\"}"));
 }
 
-void eventCallback(StatusEvent event){
-  switch(event){
+void eventCallback(StatusEvent event) {
+  switch (event) {
     case EVENT_LID_OPENED:
       Serial.println("EVENT: LID Openned.");
       sendEvent(EVENT_LID_OPENED);
@@ -151,11 +161,12 @@ void eventCallback(StatusEvent event){
 }
 
 
-void sendEvent(StatusEvent event){
+void sendEvent(StatusEvent event) {
 
 }
 
-void handle_state(YunClient client){
+void handle_state(YunClient& client) {
+  Serial.println(F("Handle state"));
   client.print(F("{\"cookTime\":"));
   client.print(slowcooker.CookTime());
   client.print(F(",\"cookTimeLeft\":"));
@@ -173,44 +184,63 @@ void handle_state(YunClient client){
   client.println(F("}"));
 }
 
-void handle_ping(YunClient client){
+void handle_ping(YunClient& client) {
   client.println(F("{}"));
 }
 
-void handle_start(YunClient client){
+void handle_start(YunClient& client) {
+  slowcooker.startCook();
   client.println(F("{}"));
 }
 
-void handle_stop(YunClient client){
+void handle_stop(YunClient& client) {
+  slowcooker.stopCook();
   client.println(F("{}"));
 }
 
-void handle_reset(YunClient client){
+void handle_reset(YunClient& client) {
   client.println(F("{}"));
 }
 
-void handle_set_time(YunClient client){
-    int time = client.parseInt();
-    if(!slowcooker.setCookTime(time)){
-      client.println(F("{\"error\":\"Failed to set cook time.\"}"));
-      return;
-    }
-    
-    client.print(F("{\"time\":"));
-    client.print(time);
-    client.println(F("}"));
+void handle_set_time(YunClient& client) {
+  if(client.available() == 0){
+    client.println(F("Status: 400"));
+    client.println();
+    client.println(F("{\"error\":\"Must supply a time value.\"}"));
+    return;
+  }
+  
+  int time = client.parseInt();
+  if (!slowcooker.setCookTime(time)) {
+    client.println(F("Status: 400"));
+    client.println();
+    client.println(F("{\"error\":\"Failed to set cook time.\"}"));
+    return;
+  }
+
+  client.print(F("{\"time\":"));
+  client.print(time);
+  client.println(F("}"));
 }
 
-void handle_set_temp(YunClient client){
-    int temp = client.parseInt();
-    if(!slowcooker.setCookTemp(temp)){
-      client.println(F("{\"error\":\"Failed to set cook temp.\"}"));
-      return;
-    }
-    
-    client.print(F("{\"temp\":"));
-    client.print(temp);
-    client.println(F("}"));
-}
+void handle_set_temp(YunClient& client) {
+  if(client.available() == 0){
+    client.println(F("Status: 400"));
+    client.println();
+    client.println(F("{\"error\":\"Must supply a temp value.\"}"));
+    return;
+  }
+  
+  int temp = client.parseInt();
+  if (!slowcooker.setCookTemp(temp)) {
+    client.println(F("Status: 400"));
+    client.println();
+    client.println(F("{\"error\":\"Failed to set cook temp.\"}"));
+    return;
+  }
 
+  client.print(F("{\"temp\":"));
+  client.print(temp);
+  client.println(F("}"));
+}
 
