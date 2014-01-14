@@ -84,12 +84,11 @@ SlowCooker slowcooker(HEATER_IO, TEMP_SENSOR_PIN, LID_SWITCH, &eventCallback);
 // Listen on default port 5555, the webserver on the Yun
 // will forward there all the HTTP requests for us.
 YunServer server;
+Process eventProcess;
 
 void setup() {
-
-  Serial.begin(115200);
   
-  delay(10000);
+  Serial.begin(115200);
   
   Serial.println(F("Initializing..."));
   //setup slowcooker
@@ -169,7 +168,16 @@ void eventCallback(StatusEvent event) {
 
 
 void sendEvent(StatusEvent event) {
-
+  if(eventProcess.running()){
+    return;
+  }
+  
+  char buf[4];
+  sprintf(buf,"%d",event);
+ 
+  eventProcess.begin(F("intellichillievent"));
+  eventProcess.addParameter(buf);
+  eventProcess.runAsynchronously();
 }
 
 void handle_state(YunClient& client) {

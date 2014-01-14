@@ -17,14 +17,16 @@ server.on("error", function (err) {
 
 server.on("message", function (buffer, rinfo) {
 
-  var msg = protocol.parse(buffer);
-  if(!msg){
-    console.error("failed to parse packet");
+  try {
+    var msg = JSON.parse(buffer);
+  }catch(err){
+    console.error(err)
     return;
   }
 
-
-  switch(msg.data[0]){
+  console.log(msg);
+  
+  switch(msg.event){
     case protocol.EventTypes.EVENT_POWERED_ON:
       console.log(rinfo.address + ":" + rinfo.port+": Powered On");
     break;

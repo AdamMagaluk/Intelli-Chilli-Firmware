@@ -25,6 +25,9 @@ function Client(opts){
 
 util.inherits(Client, events.EventEmitter);
 
+//legacy support
+Client.prototype.close = function() {}
+
 Client.prototype._request = function(resource,val,callback) {
   var pathname = path.join('/arduino',resource);
   

@@ -10,12 +10,18 @@ events[protocol.EventTypes.EVENT_LID_OPENED] = 'lidopened';
 events[protocol.EventTypes.EVENT_LID_CLOSED] = 'lidclosed';
 
 server.on("message", function (buffer, rinfo) {
-  var msg = protocol.parse(buffer);
-  if(!msg)
+  try{
+    var msg = JSON.parse(buffer);
+  }catch(err){
+    server.emit('error',err,buffer,rinfo);
+    return;
+  };
+
+  if(msg.event === undefined)
     return;
 
-  if(events[msg.data[0]] !== undefined)
-    server.emit(events[msg.data[0]],msg,rinfo);
+  if(events[msg.event] !== undefined)
+    server.emit(events[msg.event],msg,rinfo);
 
 });
 
