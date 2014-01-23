@@ -10,12 +10,21 @@
 #define DEFAULT_COOK_TEMP 27
 #define DEFAULT_COOK_TIME 0
 
+#define COOK_INTERVAL 600000
+
 class SlowCooker {
 public:
 
   enum State {
     STATE_NOT_COOKING, // on but not cooking
     STATE_COOKING // on and cooking
+  };
+  
+  enum TempSetting {
+    TEMP_WARM = 1,
+    TEMP_LOW = 3,
+    TEMP_MED = 5,
+    TEMP_HIGH = 8
   };
 
   SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(StatusEvent));
@@ -37,8 +46,12 @@ public:
   uint16_t CookTimeLeft() const;
   bool setCookTime(const uint16_t& time);
 
-  uint8_t CookTemp() const;
-  bool setCookTemp(const uint8_t& temp);
+  TempSetting CookTemp() const;
+  bool setCookTemp(const TempSetting& temp);
+  
+  static char* cookTempToText(const TempSetting& temp);
+  
+  static bool validCookTemp(int temp);
 
   uint8_t CurrentTemp() const;
   
@@ -67,8 +80,9 @@ protected:
   unsigned long m_timeCookStarted;
   uint16_t m_cookTime;
     
-  uint8_t m_cookTemp;
   float m_currentTemp;
+  
+  TempSetting m_tempSetting;
 
   bool m_lidState;
   bool m_lastLidState;
@@ -79,11 +93,18 @@ protected:
 
   // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
   OneWire m_oneWire;
-
+  
   // Pass our oneWire reference to Dallas Temperature. 
   DallasTemperature m_sensor;
 
   DeviceAddress m_sensorAddr;
+  
+  // time the heater was last turned on.
+  unsigned long m_heaterOnTime;
+  bool m_isWarming;
+  
+  // calculates if heater should be active.  
+  bool calcHeaterState();
 
   void (*m_eventCallback)(StatusEvent);
 

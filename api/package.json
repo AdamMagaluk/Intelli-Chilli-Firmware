@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "intelli-chilli-client": "0.0.1",
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "node-hue-api": "~0.2.2"
   }
 }

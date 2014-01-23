@@ -40,6 +40,9 @@
 #define HEATER_IO 4
 #define LID_SWITCH 7
 
+#define TEST_PIN 10
+#define TEST_LED 6
+
 struct HttpCommand {
   char* cmd;
   void (*func)(YunClient&);
@@ -95,6 +98,10 @@ void setup() {
   digitalWrite(RESET_PIN, HIGH);
   delay(40);
   pinMode(RESET_PIN,OUTPUT);
+    
+  pinMode(TEST_LED, OUTPUT);
+  pinMode(TEST_PIN, INPUT);
+  
   digitalWrite(RESET_PIN, HIGH);
   
   resetFlag = false;
@@ -116,6 +123,8 @@ void setup() {
   
 }
 
+
+bool it = true;
 void loop() {
   // handle slow cooker functions.
   slowcooker.loop();
@@ -134,11 +143,13 @@ void loop() {
   if(resetFlag){
     hardwareReset();
   }
-
+  
   delay(50); // Poll every 50ms
 }
 
 void process(YunClient& client) {
+  it = !it;
+  
   // read the command
   String command = client.readStringUntil('/');
 
@@ -205,7 +216,7 @@ void handle_state(YunClient& client) {
   client.print(F(",\"cookTimeLeft\":"));
   client.print(slowcooker.CookTimeLeft());
   client.print(F(",\"cookTemp\":"));
-  client.print(slowcooker.CookTemp());
+  client.print(SlowCooker::cookTempToText(slowcooker.CookTemp()));
   client.print(F(",\"currentTemp\":"));
   client.print(slowcooker.CurrentTemp());
   client.print(F(",\"lidState\":"));
@@ -213,7 +224,7 @@ void handle_state(YunClient& client) {
   client.print(F(",\"cooking\":"));
   client.print(slowcooker.isCooking());
   client.print(F(",\"heaterOn\":"));
-  client.print(slowcooker.isHeaterActive());
+  client.print(digitalRead(TEST_PIN));
     
   if(!slowcooker.tempSensorFound()){
     client.print(F(",\"error\":\"No temperature sensor found.\""));
@@ -274,16 +285,20 @@ void handle_set_temp(YunClient& client) {
     return;
   }
   
+  
+  
   int temp = client.parseInt();
-  if (!slowcooker.setCookTemp(temp)) {
+  if(!SlowCooker::validCookTemp(temp)){
     HTTP_STATUS(400);
     client.println(F("{\"error\":\"Failed to set cook temp.\"}"));
     return;
   }
   
+  
+  
   HTTP_STATUS(200);
   client.print(F("{\"temp\":"));
-  client.print(temp);
+  client.print((SlowCooker::TempSetting)temp);
   client.println(F("}"));
 }
 

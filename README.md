@@ -1,4 +1,4 @@
-Intelli-Chilli-Firmware
+  Intelli-Chilli-Firmware
 =======================
 
 Intelligent Slow Cooker Arduino Firmware

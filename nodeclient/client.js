@@ -11,6 +11,8 @@ function _word(n,i,s){
 }
 
 
+var CookTemps = ['warm','low','medium','high'];
+
 module.exports = Client;
 function Client(opts){
   
@@ -67,12 +69,11 @@ Client.prototype.setCookTime = function(time,callback) {
   this._request('/time',time,callback);
 };
 
-Client.prototype.setCookTemp = function(tempC,callback) {
-  tempC = parseInt(tempC);
-  if(tempC < 0 || tempC > 120)
+Client.prototype.setCookTemp = function(temp,callback) {
+  if(CookTemps.indexOf(temp) === -1)
     return callback(new Error('Inavlid cook temp.'));
 
-  this._request('/temp',tempC,callback);
+  this._request('/temp',temp,callback);
 };
 
 Client.prototype.startCook = function(callback) {

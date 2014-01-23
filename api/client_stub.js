@@ -56,7 +56,7 @@ client.on('time', function(p) {
 });
 
 client.on('temp', function(p) {
-  var p2 = new Packet({'action':'temp',data : { time : p.message.data.temp} });
+  var p2 = new Packet({'action':'temp',data : { temp : p.message.data.temp} });
   client.respondTo(p, p2);
 });
 

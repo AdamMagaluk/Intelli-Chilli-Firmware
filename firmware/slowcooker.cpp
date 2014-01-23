@@ -5,17 +5,48 @@
 
 #include "slowcooker.h"
 
+#define MAX_HEAT 120
+
+
+char* SlowCooker::cookTempToText(const TempSetting& temp){
+   switch(temp){
+     case SlowCooker::TEMP_WARM:
+       return "warm";
+     case SlowCooker::TEMP_LOW:
+       return "low";
+     case SlowCooker::TEMP_MED:
+       return "medium";
+     case SlowCooker::TEMP_HIGH:
+       return "high";
+     default:
+       return "undefined";
+   }
+}
+
+bool SlowCooker::validCookTemp(int temp){
+   switch(temp){
+     case SlowCooker::TEMP_WARM:
+     case SlowCooker::TEMP_LOW:
+     case SlowCooker::TEMP_MED:
+     case SlowCooker::TEMP_HIGH:
+       return true;
+     default:
+       return false;
+   }
+}
+
 SlowCooker::SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(StatusEvent)) :
   m_heaterRelayPin(heaterRelay),
   m_tempSensorPin(tempSensor),
   m_lidSwitchPin(lidSwitch),
   m_eventCallback(eventCallback),
   m_cookTime(DEFAULT_COOK_TIME),
-  m_cookTemp(DEFAULT_COOK_TEMP),
   m_state(STATE_NOT_COOKING),
   m_heaterActive(false),
   m_oneWire(m_tempSensorPin),
-  m_sensor(&m_oneWire)
+  m_sensor(&m_oneWire),
+  m_isWarming(false),
+  m_tempSetting(TEMP_WARM)
 { 
   // start with heater off
   
@@ -29,6 +60,42 @@ void SlowCooker::setup(){
   initTempSensor();
 }
 
+// calculates if heater should be active.  
+bool SlowCooker::calcHeaterState(){
+    
+  // if warming heating element up, ramp to max temp
+  if(m_isWarming){
+    // turn heater on/off based on temp.
+    if(m_currentTemp <= MAX_HEAT){
+      return true;
+    }else {
+      m_isWarming = false;
+      return false;
+    }
+  }
+  
+  if(m_heaterActive){
+    // calc how long the each interval should run. m_tempSetting is a percentage of cook_interval
+    long tOn = ((m_tempSetting / 10.0) * COOK_INTERVAL);
+     
+    if(millis()-m_heaterOnTime >= tOn)
+      return false;
+    else
+      return true;
+  }else{
+    // calc how long the each interval should run. 10-m_tempSetting is a percentage of cook_interval
+    long tOn = ((10-m_tempSetting / 10.0) * COOK_INTERVAL);
+    if(millis()-m_heaterOnTime >= tOn){
+      // off for desired time, now turn back on.
+      return true;
+    }else{
+      // keep off
+      return false;
+    }
+  }
+  
+}
+
 // run once in main loop, handles reading pin vals
 // setting heater on/off
 void SlowCooker::loop(){
@@ -38,18 +105,22 @@ void SlowCooker::loop(){
 
   if(m_state == STATE_NOT_COOKING)
     return;
-
-  // turn heater on/off based on temp.
-  if(m_currentTemp >= m_cookTemp){
-    if(m_heaterActive)
-      Serial.println(F("Turning Heater Off"));
-    setHeaterState(false);
-  }else if(m_currentTemp <= m_cookTemp-1){
-    if(!m_heaterActive)
+  
+  if(calcHeaterState()){
+    if(!m_heaterActive){
       Serial.println(F("Turning Heater On"));
+      m_heaterOnTime = millis();
+    }
     setHeaterState(true);
+  }else{
+    if(m_heaterActive){
+      Serial.println(F("Turning Heater Off"));
+      m_heaterOnTime = millis();
+    }
+    setHeaterState(false);
   }
-
+  
+  
   // check if cook is finished based on start time.
   // if cook time is zero then it will run forever!!!
   if(m_cookTime != 0){
@@ -100,7 +171,7 @@ float SlowCooker::readTemp(){
 // resets heat to warm level.  
 void SlowCooker::resetToDefault() {
   m_cookTime = DEFAULT_COOK_TIME;
-  m_cookTemp = DEFAULT_COOK_TEMP;
+  m_tempSetting = TEMP_WARM;
 }
 
 void SlowCooker::setHeaterState(bool state) {
@@ -117,6 +188,7 @@ bool SlowCooker::isCooking(){
 bool SlowCooker::startCook() {
   m_state = STATE_COOKING;
   m_timeCookStarted = millis();
+  m_isWarming = true;
 }
 
 // stops cooking, resets counter.
@@ -136,8 +208,8 @@ bool SlowCooker::setCookTime(const uint16_t& minutes) {
   return true;
 }
 
-bool SlowCooker::setCookTemp(const uint8_t& temp) {
-  m_cookTemp = temp;
+bool SlowCooker::setCookTemp(const TempSetting& temp) {
+  m_tempSetting = temp;
 }
 
 uint16_t SlowCooker::CookTime() const {
@@ -151,8 +223,8 @@ uint16_t SlowCooker::CookTimeLeft() const {
   return ((m_cookTime * 60) - ((millis() - m_timeCookStarted)/1000))/60;
 }
 
-uint8_t SlowCooker::CookTemp() const {
-  return m_cookTemp;
+SlowCooker::TempSetting SlowCooker::CookTemp() const {
+  return m_tempSetting;
 }
 
 uint8_t SlowCooker::CurrentTemp() const {
