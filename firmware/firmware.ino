@@ -223,6 +223,12 @@ void handle_state(YunClient& client) {
   client.print(slowcooker.isLidOpen());
   client.print(F(",\"cooking\":"));
   client.print(slowcooker.isCooking());
+  client.print(F(",\"address\":"));
+   
+  for(int i=0;i<8;i++){
+    client.print(slowcooker.m_sensorAddr[i]);    
+  }
+  
   client.print(F(",\"heaterOn\":"));
   client.print(digitalRead(TEST_PIN));
     

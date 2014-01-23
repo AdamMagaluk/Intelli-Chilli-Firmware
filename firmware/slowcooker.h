@@ -68,7 +68,9 @@ public:
   void loop();
 
   void setup();
-
+  
+  DeviceAddress m_sensorAddr;
+  
 protected:
 
   bool m_tempFound;
@@ -97,7 +99,7 @@ protected:
   // Pass our oneWire reference to Dallas Temperature. 
   DallasTemperature m_sensor;
 
-  DeviceAddress m_sensorAddr;
+
   
   // time the heater was last turned on.
   unsigned long m_heaterOnTime;
