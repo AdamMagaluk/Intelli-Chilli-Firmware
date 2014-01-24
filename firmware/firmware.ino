@@ -215,21 +215,23 @@ void handle_state(YunClient& client) {
   client.print(slowcooker.CookTime());
   client.print(F(",\"cookTimeLeft\":"));
   client.print(slowcooker.CookTimeLeft());
-  client.print(F(",\"cookTemp\":"));
+  client.print(F(",\"cookTemp\":\""));
   client.print(SlowCooker::cookTempToText(slowcooker.CookTemp()));
-  client.print(F(",\"currentTemp\":"));
+  client.print(F("\",\"currentTemp\":"));
   client.print(slowcooker.CurrentTemp());
   client.print(F(",\"lidState\":"));
   client.print(slowcooker.isLidOpen());
   client.print(F(",\"cooking\":"));
   client.print(slowcooker.isCooking());
-  client.print(F(",\"address\":"));
+  client.print(F(",\"address\":\""));
    
   for(int i=0;i<8;i++){
-    client.print(slowcooker.m_sensorAddr[i]);    
+    if( slowcooker.m_sensorAddr[i] < 0x10)
+      client.print("0");
+    client.print(slowcooker.m_sensorAddr[i],HEX);
   }
   
-  client.print(F(",\"heaterOn\":"));
+  client.print(F("\",\"heaterOn\":"));
   client.print(digitalRead(TEST_PIN));
     
   if(!slowcooker.tempSensorFound()){
@@ -291,21 +293,19 @@ void handle_set_temp(YunClient& client) {
     return;
   }
   
-  
-  
   int temp = client.parseInt();
   if(!SlowCooker::validCookTemp(temp)){
     HTTP_STATUS(400);
-    client.println(F("{\"error\":\"Failed to set cook temp.\"}"));
+    client.println(F("{\"error\":\"Non valid cook temp.\"}"));
     return;
   }
   
-  
+  slowcooker.setCookTemp((SlowCooker::TempSetting)temp);
   
   HTTP_STATUS(200);
-  client.print(F("{\"temp\":"));
-  client.print((SlowCooker::TempSetting)temp);
-  client.println(F("}"));
+  client.print(F("{\"temp\":\""));
+  client.print(SlowCooker::cookTempToText(slowcooker.CookTemp()));
+  client.println(F("\"}"));
 }
 
 void hardwareReset(){

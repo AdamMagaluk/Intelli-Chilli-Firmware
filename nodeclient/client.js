@@ -10,8 +10,12 @@ function _word(n,i,s){
   return ((n >> (8*(s-i))) & 0xff); // cook time msb
 }
 
-
-var CookTemps = ['warm','low','medium','high'];
+var  CookTemps = {
+  warm : 1,
+  low : 3,
+  medium : 5,
+  high : 8
+};
 
 module.exports = Client;
 function Client(opts){
@@ -48,8 +52,11 @@ Client.prototype._request = function(resource,val,callback) {
     if(err)
       return callback(err);
     
+    console.log(body);
     try{
       var json = JSON.parse(body);
+      if(res.statusCode !== 200)
+        return callback(json);
       return callback(err,json);
     }catch(err){
       return callback(err);
@@ -70,10 +77,11 @@ Client.prototype.setCookTime = function(time,callback) {
 };
 
 Client.prototype.setCookTemp = function(temp,callback) {
-  if(CookTemps.indexOf(temp) === -1)
+  var tempVal = CookTemps[temp];
+  if(tempVal === undefined)
     return callback(new Error('Inavlid cook temp.'));
 
-  this._request('/temp',temp,callback);
+  this._request('/temp',tempVal,callback);
 };
 
 Client.prototype.startCook = function(callback) {

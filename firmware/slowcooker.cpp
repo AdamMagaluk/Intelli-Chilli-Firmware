@@ -69,23 +69,36 @@ bool SlowCooker::calcHeaterState(){
     if(m_currentTemp <= MAX_HEAT){
       return true;
     }else {
+      Serial.println("Reached warming state.");
       m_isWarming = false;
       return false;
     }
   }
   
+  long delta = millis()-m_heaterOnTime;  
   if(m_heaterActive){
     // calc how long the each interval should run. m_tempSetting is a percentage of cook_interval
     long tOn = ((m_tempSetting / 10.0) * COOK_INTERVAL);
-     
-    if(millis()-m_heaterOnTime >= tOn)
+    Serial.print("Heater On: ");
+    Serial.print(delta);
+    Serial.print(" >= ");
+    Serial.println(tOn);
+    
+    if(delta >= tOn)
       return false;
     else
       return true;
   }else{
     // calc how long the each interval should run. 10-m_tempSetting is a percentage of cook_interval
     long tOn = ((10-m_tempSetting / 10.0) * COOK_INTERVAL);
-    if(millis()-m_heaterOnTime >= tOn){
+    
+    Serial.print("Heater Off: ");
+    Serial.print(delta);
+    Serial.print(" >= ");
+    Serial.println(tOn);
+
+    
+    if(delta >= tOn){
       // off for desired time, now turn back on.
       return true;
     }else{
@@ -210,6 +223,7 @@ bool SlowCooker::setCookTime(const uint16_t& minutes) {
 
 bool SlowCooker::setCookTemp(const TempSetting& temp) {
   m_tempSetting = temp;
+  return true;
 }
 
 uint16_t SlowCooker::CookTime() const {
