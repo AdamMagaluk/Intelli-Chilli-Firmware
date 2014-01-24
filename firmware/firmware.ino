@@ -32,16 +32,11 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-#include "protocol.h"
-#include "parser.h"
 #include "slowcooker.h"
 
 #define TEMP_SENSOR_PIN 2
 #define HEATER_IO 4
 #define LID_SWITCH 7
-
-#define TEST_PIN 10
-#define TEST_LED 6
 
 struct HttpCommand {
   char* cmd;
@@ -98,16 +93,12 @@ void setup() {
   digitalWrite(RESET_PIN, HIGH);
   delay(40);
   pinMode(RESET_PIN,OUTPUT);
-    
-  pinMode(TEST_LED, OUTPUT);
-  pinMode(TEST_PIN, INPUT);
   
   digitalWrite(RESET_PIN, HIGH);
   
   resetFlag = false;
   Serial.begin(115200);
   
-  Serial.println(F("Initializing..."));
   //setup slowcooker
   slowcooker.setup();
 
@@ -119,7 +110,6 @@ void setup() {
   server.begin();
 
   sendEvent(EVENT_POWERED_ON);
-  Serial.println(F("Starting main loop."));
   
 }
 
@@ -178,16 +168,13 @@ void process(YunClient& client) {
 void eventCallback(StatusEvent event) {
   switch (event) {
     case EVENT_LID_OPENED:
-      Serial.println("EVENT: LID Openned.");
       sendEvent(EVENT_LID_OPENED);
       break;
     case EVENT_LID_CLOSED:
       sendEvent(EVENT_LID_CLOSED);
-      Serial.println("EVENT: LID Closed.");
       break;
     case EVENT_COOK_END:
       sendEvent(EVENT_COOK_END);
-      Serial.println("EVENT: Cook finished turning off.");
       break;
   };
 }
@@ -207,6 +194,7 @@ void sendEvent(StatusEvent event) {
 }
 
 void handle_state(YunClient& client) {
+ 
   Serial.println(F("Handle state"));
   
   HTTP_STATUS(200);
@@ -235,7 +223,7 @@ void handle_state(YunClient& client) {
   client.print(slowcooker.isHeaterActive());
     
   if(!slowcooker.tempSensorFound()){
-    //client.print(F(",\"error\":\"No temperature sensor found.\""));
+    client.print(F(",\"error\":\"No temperature sensor found.\""));
   }
   
   client.println(F("}"));
