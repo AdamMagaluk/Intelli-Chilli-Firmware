@@ -10,7 +10,7 @@
 #define DEFAULT_COOK_TEMP 27
 #define DEFAULT_COOK_TIME 0
 
-#define COOK_INTERVAL 600000
+#define COOK_INTERVAL 300000
 
 class SlowCooker {
 public:
@@ -21,10 +21,10 @@ public:
   };
   
   enum TempSetting {
-    TEMP_WARM = 1,
-    TEMP_LOW = 3,
-    TEMP_MED = 5,
-    TEMP_HIGH = 8
+    TEMP_WARM = 15,
+    TEMP_LOW = 30,
+    TEMP_MED = 45,
+    TEMP_HIGH = 65
   };
 
   SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(StatusEvent));

@@ -7,7 +7,7 @@ var HueApi = require("node-hue-api").HueApi;
 
 //var client = new Fog.Client({'endpoint':'ws://thefog.herokuapp.com/'});
 var client = new Fog.Client({'endpoint':'ws://localhost:3000/'});
-var chili = new Client({address:'192.168.1.9'});
+var chili = new Client({address:'arduino1.local'});
 
 client.on('error', function(data) {
   console.log('error');
@@ -141,12 +141,24 @@ udpserver.on('cookend',function(msg,rinfo){
 });
 
 udpserver.on('lidopened',function(msg,rinfo){
+
+  hue.notificationOne(function(err){
+    if(err)
+      console.error(err);
+  });
+
   client.send(new Packet({'action':'lidopened',data : { host : rinfo.address }}));
   
   console.log("Event: (lid closed) from " + rinfo.address + ":" + rinfo.port);
 });
 
 udpserver.on('lidclosed',function(msg,rinfo){
+
+  hue.notificationOne(function(err){
+    if(err)
+      console.error(err);
+  });
+
   client.send(new Packet({'action':'lidclosed',data : { host : rinfo.address }}));
   
   console.log("Event: (lid opened) from " + rinfo.address + ":" + rinfo.port);

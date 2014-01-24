@@ -10,11 +10,11 @@ function _word(n,i,s){
   return ((n >> (8*(s-i))) & 0xff); // cook time msb
 }
 
-var  CookTemps = {
-  warm : 1,
-  low : 3,
-  medium : 5,
-  high : 8
+var CookTemps = {
+  warm : 15,
+  low : 30,
+  medium : 45,
+  high : 65
 };
 
 module.exports = Client;
@@ -98,25 +98,3 @@ Client.prototype.resetDevice = function(callback) {
 Client.prototype.returnState = function(callback) {
   this._request('/state',callback);
 };
-
-
-/*
-function sendPacket(done){
-
-  client.once("error", function (err) {
-    console.log("server error:\n" + err.stack);
-    client.close();
-  });
-
-  var buf = new Buffer([0x03,0x07,0xEE]);
-  client.send(buf, 0, buf.length, 3000, "10.0.1.24", function(err, bytes) {
-    client.once("message", function (msg, rinfo) {
-      console.log(msg);
-      client.close();
-    });
-  });
-}
-
-sendPacket();
-*/
-

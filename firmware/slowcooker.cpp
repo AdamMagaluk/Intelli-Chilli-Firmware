@@ -69,7 +69,6 @@ bool SlowCooker::calcHeaterState(){
     if(m_currentTemp <= MAX_HEAT){
       return true;
     }else {
-      Serial.println("Reached warming state.");
       m_isWarming = false;
       return false;
     }
@@ -78,11 +77,7 @@ bool SlowCooker::calcHeaterState(){
   long delta = millis()-m_heaterOnTime;  
   if(m_heaterActive){
     // calc how long the each interval should run. m_tempSetting is a percentage of cook_interval
-    long tOn = ((m_tempSetting / 10.0) * COOK_INTERVAL);
-    Serial.print("Heater On: ");
-    Serial.print(delta);
-    Serial.print(" >= ");
-    Serial.println(tOn);
+    long tOn = ((float)(m_tempSetting / 100.0) * COOK_INTERVAL);
     
     if(delta >= tOn)
       return false;
@@ -90,15 +85,9 @@ bool SlowCooker::calcHeaterState(){
       return true;
   }else{
     // calc how long the each interval should run. 10-m_tempSetting is a percentage of cook_interval
-    long tOn = ((10-m_tempSetting / 10.0) * COOK_INTERVAL);
+    long tOn = ( (float)((100-m_tempSetting) / 100.0) * COOK_INTERVAL);
     
-    Serial.print("Heater Off: ");
-    Serial.print(delta);
-    Serial.print(" >= ");
-    Serial.println(tOn);
-
-    
-    if(delta >= tOn){
+    if(delta >= tOn && m_currentTemp <= 100){
       // off for desired time, now turn back on.
       return true;
     }else{
@@ -146,9 +135,9 @@ void SlowCooker::loop(){
 
   // send event if lid has been opened or closed.
   if(m_lastLidState && !m_lidState){
-    m_eventCallback(EVENT_LID_CLOSED);
-  }else if(!m_lastLidState && m_lidState){
     m_eventCallback(EVENT_LID_OPENED);
+  }else if(!m_lastLidState && m_lidState){
+    m_eventCallback(EVENT_LID_CLOSED);
   }
 
 }
@@ -162,7 +151,6 @@ void SlowCooker::initTempSensor(){
   // search for devices on the bus and assign based on an index
   if (!m_sensor.getAddress(m_sensorAddr, 0)){
     m_tempFound = false;
-    Serial.println(F("Unable to find address for Device 0"));
   }else{
     m_tempFound = true;
   }

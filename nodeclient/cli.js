@@ -33,7 +33,6 @@ commands[program.args[0]]();
 
 function startCook(){
   c.startCook(function(err){
-    c.close();
     if(err){
       console.error("Failed to start cook",err);
       return;
@@ -44,7 +43,6 @@ function startCook(){
 
 function stopCook(){
   c.stopCook(function(err){
-    c.close();
     if(err){
       console.error("Failed to stop cook",err);
       return;
@@ -57,13 +55,11 @@ function stopCook(){
 function setCookTemp(){
   var t = program.args[1];
   if(t == undefined){
-    c.close();
     console.error('Expecting temp param after command.');
     return;
   }
 
   c.setCookTemp(t,function(err){
-    c.close()
     if(err){
       console.error("Failed to set cook temp",err);
       return;
@@ -75,13 +71,11 @@ function setCookTemp(){
 function setCookTime(){
   var t = program.args[1];
   if(t == undefined){
-    c.close();
     console.error('Expecting time param after command.');
     return;
   }
 
   c.setCookTime(t,function(err){
-    c.close()
     if(err){
       console.error("Failed to set cook time",err);
       return;
@@ -92,7 +86,6 @@ function setCookTime(){
 }
 function showState(){
   c.returnState(function(err,state){
-    c.close()
     if(err){
       console.error("Failed to get state",err);
       return;
@@ -105,7 +98,6 @@ function showState(){
 
 function resetDevice(){
   c.resetDevice(function(err,state){
-    c.close()
     if(err){
       console.error("Failed to reset device",err);
       return;

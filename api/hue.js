@@ -24,5 +24,11 @@ module.exports.notification = function notification(callback){
       blink(0),
       delay(500),
       blink(0),
+      delay(500),
+      blink(0),
   ],callback);
+}
+
+module.exports.notificationOne = function notificationOne(callback){
+  blink(0)(callback);
 }

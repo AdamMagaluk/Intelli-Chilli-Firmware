@@ -232,10 +232,10 @@ void handle_state(YunClient& client) {
   }
   
   client.print(F("\",\"heaterOn\":"));
-  client.print(digitalRead(TEST_PIN));
+  client.print(slowcooker.isHeaterActive());
     
   if(!slowcooker.tempSensorFound()){
-    client.print(F(",\"error\":\"No temperature sensor found.\""));
+    //client.print(F(",\"error\":\"No temperature sensor found.\""));
   }
   
   client.println(F("}"));
