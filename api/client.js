@@ -3,12 +3,19 @@ var HueApi = require("node-hue-api").HueApi;
     Client = require('intelli-chilli-client'),
     udpserver = require('./chilli-server'),
     hue = require('./hue'),
-    ClientId = null,
+    ClientId = '28554D220500009C',
     Packet = Fog.Packet;
 
 //var client = new Fog.Client({'endpoint':'ws://thefog.herokuapp.com/'});
 var client = new Fog.Client({'endpoint':'ws://localhost:3000/'});
 var chili = new Client({address:'arduino1.local'});
+
+function updateClientId(callback){
+  if(typeof callback === 'function')
+    callback();
+}
+
+updateClientId();
 
 client.on('error', function(data) {
   console.log('error');
@@ -145,14 +152,23 @@ udpserver.on('error',function(err){
 });
 
 udpserver.on('powered',function(msg,rinfo){
-  var p = new Packet({'action':'powered',data : { host : rinfo.address }  })
-  p.setClientId(ClientId);
-  client.send(p);
-
   console.log("Event: (powered on) from " + rinfo.address + ":" + rinfo.port);
+
+  function updateFrontEnd(){
+    var p = new Packet({'action':'powered',data : { host : rinfo.address }  })
+    p.setClientId(ClientId);
+    client.send(p);
+  }
+
+  if(ClientId === null)
+    updateClientId(updateFrontEnd);
+
+  updateFrontEnd();
 });
 
 udpserver.on('cookend',function(msg,rinfo){
+  if(ClientId === null)
+    updateClientId();
 
   hue.notification(function(err){
     if(err)
@@ -166,6 +182,9 @@ udpserver.on('cookend',function(msg,rinfo){
 
 udpserver.on('lidopened',function(msg,rinfo){
 
+  if(ClientId === null)
+    updateClientId();
+
   hue.notificationOne(function(err){
     if(err)
       console.error(err);
@@ -178,6 +197,9 @@ udpserver.on('lidopened',function(msg,rinfo){
 });
 
 udpserver.on('lidclosed',function(msg,rinfo){
+
+  if(ClientId === null)
+    updateClientId();
 
   hue.notificationOne(function(err){
     if(err)
