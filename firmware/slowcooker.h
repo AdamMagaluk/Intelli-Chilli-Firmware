@@ -5,7 +5,19 @@
 #define SLOWCOOKER_H
 
 #include <stdint.h>
-#include "protocol.h"
+
+enum StatusEvent {
+  EVENT_POWERED_ON,
+  EVENT_COOK_STARTED,
+  EVENT_COOK_END,
+  EVENT_LID_OPENED,
+  EVENT_LID_CLOSED
+};
+
+enum LidState {
+  LID_STATE_CLOSED,
+  LID_STATE_OPPENNED
+};
 
 #define DEFAULT_COOK_TEMP 27
 #define DEFAULT_COOK_TIME 0
@@ -26,7 +38,7 @@ public:
     TEMP_MED = 45,
     TEMP_HIGH = 65
   };
-
+  
   SlowCooker(const int& heaterRelay, const int& tempSensor, const int& lidSwitch, void (*eventCallback)(StatusEvent));
 
   // level warm/low/med/high -> temp setting
