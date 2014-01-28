@@ -36,7 +36,7 @@
 
 #define TEMP_SENSOR_PIN 2
 #define HEATER_IO 4
-#define LID_SWITCH 7
+#define LID_SWITCH 5
 
 struct HttpCommand {
   char* cmd;

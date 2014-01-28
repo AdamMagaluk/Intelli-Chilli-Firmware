@@ -135,9 +135,9 @@ void SlowCooker::loop(){
 
   // send event if lid has been opened or closed.
   if(m_lastLidState && !m_lidState){
-    m_eventCallback(EVENT_LID_OPENED);
-  }else if(!m_lastLidState && m_lidState){
     m_eventCallback(EVENT_LID_CLOSED);
+  }else if(!m_lastLidState && m_lidState){
+    m_eventCallback(EVENT_LID_OPENED);
   }
 
 }
