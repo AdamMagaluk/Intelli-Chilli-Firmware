@@ -9,7 +9,7 @@
   "author": "mdobs",
   "license": "MIT",
   "dependencies": {
-    "intelli-chilli-client": "0.0.1",
+    "intelli-chilli-client": "~0.0.5",
     "async": "~0.2.9",
     "node-hue-api": "~0.2.2"
   }
