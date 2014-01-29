@@ -112,7 +112,7 @@ Client.prototype.returnState = function(callback) {
     else
       state.heaterOn = true;
 
-    if(state.lidState === 0)
+    if(state.lidState === 1)
       state.lidState = 'closed';
     else
       state.lidState = 'opened';
