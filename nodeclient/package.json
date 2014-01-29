@@ -9,6 +9,7 @@
   "author": "Adam Magaluk <AdamMagaluk@gmail.com>",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "extend": "~1.2.1"
+    "extend": "~1.2.1",
+    "request": "~2.33.0"
   }
 }
