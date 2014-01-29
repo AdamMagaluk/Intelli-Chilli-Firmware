@@ -52,7 +52,6 @@ Client.prototype._request = function(resource,val,callback) {
     if(err)
       return callback(err);
     
-    console.log(body);
     try{
       var json = JSON.parse(body);
       if(res.statusCode !== 200)
@@ -96,5 +95,28 @@ Client.prototype.resetDevice = function(callback) {
   this._request('/reset',callback);
 };
 Client.prototype.returnState = function(callback) {
-  this._request('/state',callback);
+  this._request('/state',function(err,state){
+    if(err)
+      return callback(err);
+
+    state.cookTimeRange  = [0,(24*60)];
+    state.cookTempRange  = ['warm','low','medium','high'];
+
+    if(state.cooking === 0)
+      state.cooking = false;
+    else
+      state.cooking = true;
+
+    if(state.heaterOn === 0)
+      state.heaterOn = false;
+    else
+      state.heaterOn = true;
+
+    if(state.lidState === 0)
+      state.lidState = 'closed';
+    else
+      state.lidState = 'opened';
+
+    callback(err,state);
+  });
 };
