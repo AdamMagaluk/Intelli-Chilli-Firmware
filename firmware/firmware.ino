@@ -63,6 +63,7 @@ void handle_stop(YunClient& client);
 void handle_reset(YunClient& client);
 void handle_set_time(YunClient& client);
 void handle_set_temp(YunClient& client);
+void handle_test_event(YunClient& client);
 
 #define HTTP_STATUS(code)   client.print(F("Status: "));client.println(code); \
                             client.println(F("Content-Type: application/json")); \
@@ -76,6 +77,7 @@ static struct HttpCommand http_endpoints[] = {
   {"reset", handle_reset},
   {"time", handle_set_time},
   {"temp", handle_set_temp},
+  {"testevent", handle_test_event},
   {0, 0}
 };
 
@@ -109,7 +111,7 @@ void setup() {
   server.listenOnLocalhost();
   server.begin();
 
-  sendEvent(EVENT_POWERED_ON);
+//  sendEvent(EVENT_POWERED_ON);
   
 }
 
@@ -295,6 +297,12 @@ void handle_set_temp(YunClient& client) {
   client.print(SlowCooker::cookTempToText(slowcooker.CookTemp()));
   client.println(F("\"}"));
 }
+
+void handle_test_event(YunClient& client) {
+  sendEvent(EVENT_POWERED_ON);
+  client.println(F("{}"));
+}
+
 
 void hardwareReset(){
   Process p;
